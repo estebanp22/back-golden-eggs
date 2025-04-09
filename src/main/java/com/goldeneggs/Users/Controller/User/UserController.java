@@ -1,10 +1,10 @@
 package com.goldeneggs.Users.Controller.User;
 
-import com.goldeneggs.Users.Model.Rol.Rol;
-import com.goldeneggs.Users.Model.User.Usuario;
-import com.goldeneggs.Users.Model.User.UsuarioRol;
-import com.goldeneggs.Users.Service.Rol.RolService;
-import com.goldeneggs.Users.Service.User.UsuarioService;
+import com.goldeneggs.Users.Model.Rol.Role;
+import com.goldeneggs.Users.Model.User.User;
+import com.goldeneggs.Users.Model.User.UserRole;
+import com.goldeneggs.Users.Service.Rol.RoleService;
+import com.goldeneggs.Users.Service.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +22,17 @@ import java.util.Set;
 public class UserController {
 
     @Autowired
-    private UsuarioService usuarioService;
+    private UserService userService;
 
     @Autowired
-    private RolService rolService;
+    private RoleService roleService;
 
-    //@Autowired
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
 
     /**
-     * @param usuario{ "documento":"14703892",
+     * @param user{ "documento":"14703892",
      *                 "email":"izquierdin666@hotmail.com",
      *                 "nombre":"Andrés Izquierdo",
      *                 "enabled":1
@@ -41,25 +41,25 @@ public class UserController {
      *                 <p>
      *                 Guarda a un nuevo administrador asignandole el rol
      *                 recordar que username siempre es el mismo número de documento, así mismo la contraseña, ya que el usuario debe cambiarla en el login
-     * @return
+     * @return Ok or Internal Error
      */
     @PostMapping("/save/{rol_id}")
-    public ResponseEntity<Usuario> save(@RequestBody Usuario usuario, @PathVariable Long rol_id) {
+    public ResponseEntity<User> save(@RequestBody User user, @PathVariable Long rol_id) {
         try {
-            Rol rol = rolService.get(rol_id);
-            if (rol == null) {
+            Role role = roleService.get(rol_id);
+            if (role == null) {
                 return ResponseEntity.notFound().build();
             } else {
-                String passEncriptada = passwordEncoder.encode(usuario.getDocumento().toString());
-                usuario.setPassword(passEncriptada);
-                usuario.setUsername(String.valueOf(usuario.getDocumento()));
-                usuario.setEnabled(true);
-                UsuarioRol usuarioRol = new UsuarioRol();
-                usuarioRol.setRol(rol);
-                usuarioRol.setUsuario(usuario);
-                Set<UsuarioRol> usuariosRoles = Collections.singleton(usuarioRol);
-                Usuario usuarioGuardado = usuarioService.guardarUsuario(usuario, usuariosRoles);
-                return ResponseEntity.ok(usuarioGuardado);
+                String passEncriptada = passwordEncoder.encode(user.getId().toString());
+                user.setPassword(passEncriptada);
+                user.setUsername(String.valueOf(user.getId()));
+                user.setEnabled(true);
+                UserRole userRole = new UserRole();
+                userRole.setRole(role);
+                userRole.setUser(user);
+                Set<UserRole> usersRoles = Collections.singleton(userRole);
+                User userGuardado = userService.saveUser(user, usersRoles);
+                return ResponseEntity.ok(userGuardado);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -67,22 +67,22 @@ public class UserController {
     }
 
     @GetMapping("/get/{username}")
-    public ResponseEntity<Usuario> get(@PathVariable String username) {
+    public ResponseEntity<User> get(@PathVariable String username) {
         try {
-            Usuario usuario = usuarioService.obtenerUsuario(username);
-            if (usuario == null) {
+            User user = userService.getUser(username);
+            if (user == null) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/getAll")
-    public ResponseEntity<List<Usuario>> getAll() {
+    public ResponseEntity<List<User>> getAll() {
         try {
-            List<Usuario> users = usuarioService.getAllUsers();
+            List<User> users = userService.getAllUsers();
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -92,18 +92,18 @@ public class UserController {
 
     /**
      * @param username Activa a un administrador cambiando el atributo enabled a true permitiéndole iniciar sesión de nuevo
-     * @return
+     * @return Ok, not found or Internal Error
      */
 
     @PutMapping("/active/{username}")
-    public ResponseEntity<Usuario> activeUser(@PathVariable String username) {
+    public ResponseEntity<User> activeUser(@PathVariable String username) {
         try {
-            Usuario usuario = usuarioService.obtenerUsuario(username);
-            if (usuario == null) {
+            User user = userService.getUser(username);
+            if (user == null) {
                 return ResponseEntity.notFound().build();
             }
-            usuarioService.activarUsuario(usuario);
-            return ResponseEntity.ok(usuario);
+            userService.activateUser(user);
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -114,14 +114,14 @@ public class UserController {
      * @return Desactiva a un administrador cambiando el atributo enabled a false, esto impide que el administrador pueda iniciar sesión.
      */
     @PutMapping("/disable/{username}")
-    public ResponseEntity<Usuario> delete(@PathVariable String username) {
+    public ResponseEntity<User> delete(@PathVariable String username) {
         try {
-            Usuario usuario = usuarioService.obtenerUsuario(username);
-            if (usuario == null) {
+            User user = userService.getUser(username);
+            if (user == null) {
                 return ResponseEntity.notFound().build();
             }
-            usuarioService.deshabilitarUsuario(usuario);
-            return ResponseEntity.ok(usuario);
+            userService.disableUser(user);
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -130,15 +130,15 @@ public class UserController {
     @PutMapping("/updatePassword/{username}")
     public ResponseEntity<?> updatePassword(@PathVariable String username, @RequestBody Map<String, String> request) {
         try {
-            Usuario usuario = usuarioService.obtenerUsuario(username);
-            if (usuario == null) {
+            User user = userService.getUser(username);
+            if (user == null) {
                 return ResponseEntity.notFound().build();
             }
 
             String email = request.get("email");
-            Usuario nuevoUsuario = usuarioService.updatePassword(usuario, email);
+            User newUser = userService.updatePassword(user, email);
 
-            return ResponseEntity.ok(nuevoUsuario);
+            return ResponseEntity.ok(newUser);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -164,23 +164,23 @@ public class UserController {
             @RequestBody Map<String, String> requestBody) {
         try {
             // Validar que la nueva contraseña está presente en el cuerpo de la solicitud
-            String nuevaContrasena = requestBody.get("password");
-            if (nuevaContrasena == null || nuevaContrasena.isBlank()) {
+            String newPassword = requestBody.get("password");
+            if (newPassword == null || newPassword.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("La nueva contraseña es obligatoria.");
             }
 
             // Obtener el usuario basado en el username
-            Usuario usuario = usuarioService.obtenerUsuario(username);
-            if (usuario == null) {
+            User user = userService.getUser(username);
+            if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Usuario no encontrado con el username: " + username);
             }
 
             // Actualizar la contraseña del usuario
-            Usuario usuarioActualizado = usuarioService.updatePasswordModule(usuario, nuevaContrasena);
+            User userUpdated = userService.updatePasswordModule(user, newPassword);
 
-            return ResponseEntity.ok(usuarioActualizado);
+            return ResponseEntity.ok(userUpdated);
 
         } /*catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -193,7 +193,7 @@ public class UserController {
 
     /**
      * @param username
-     * @param usuario
+     * @param user
      * @param rolID    {
      *                 "documento":"14703892",
      *                 "email":"izquierdin666@hotmail.com",
@@ -204,21 +204,21 @@ public class UserController {
      */
 
     @PutMapping("/update/{username}/{rolID}")
-    public ResponseEntity<?> update(@PathVariable String username, @RequestBody Usuario usuario, @PathVariable long rolID) {
+    public ResponseEntity<?> update(@PathVariable String username, @RequestBody User user, @PathVariable long rolID) {
         try {
-            Usuario usuarioExistente = usuarioService.obtenerUsuario(username);
-            if (usuarioExistente == null) {
+            User userExisting = userService.getUser(username);
+            if (userExisting == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
             }
 
-            Rol rol = rolService.get(rolID);
+            Role role = roleService.get(rolID);
 
-            if (rol == null) {
+            if (role == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Rol no encontrado");
             }
 
-            Usuario nuevoUsuario = usuarioService.actualizarUsuario(username, usuario, rol);
-            return ResponseEntity.ok(nuevoUsuario);
+            User newUser = userService.updateUser(username, user, role);
+            return ResponseEntity.ok(newUser);
 
         } /*catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

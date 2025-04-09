@@ -13,29 +13,33 @@ import java.util.Set;
 
 @Entity
 @Data
-@Table(name = "administradores")
-public class Usuario implements  UserDetails {
+@Table(name = "users")
+public class User implements  UserDetails {
 
     @Id
-    @Column(name = "documento", unique = true, nullable = false)
-    private Long documento;
-    @Column(name = "correo", unique = true, nullable = false)
+    @Column(name = "id", unique = true, nullable = false)
+    private Long id;
+    @Column(name = "name", nullable = false)
+    private String name;
+    @Column(name = "phone_number", unique = true, nullable = false)
+    private String phoneNumbre;
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
-    @Column(name = "nombre", nullable = false)
-    private String nombre;
-    @Column(name = "pass", nullable = false)
-    private String password;
-    @Column(name = "enabled", nullable = false)
-    private boolean enabled = true;
     @Column(name = "username", unique = true, nullable = false)
     private String username;
+    @Column(name = "password", nullable = false)
+    private String password;
+    @Column(name = "address", nullable = false)
+    private String address;
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
 
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "usuario")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "user")
     @JsonIgnore
-    private Set<UsuarioRol> usuarioRoles = new HashSet<>();
+    private Set<UserRole> userRoles = new HashSet<>();
 
-    public Usuario() {
+    public User() {
     }
 
     @Override
@@ -57,8 +61,8 @@ public class Usuario implements  UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-        for (UsuarioRol usuarioRol : this.usuarioRoles) {
-            authorities.add(new SimpleGrantedAuthority(usuarioRol.getRol().getRolNombre()));
+        for (UserRole userRole : this.userRoles) {
+            authorities.add(new SimpleGrantedAuthority(userRole.getRole().getRoleName()));
         }
         return authorities;
     }

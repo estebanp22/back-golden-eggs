@@ -4,7 +4,7 @@ package com.goldeneggs.Users.Controller.Auth;
 import com.goldeneggs.Config.Security.JwtUtils;
 import com.goldeneggs.Users.Model.Auth.JwtRequest;
 import com.goldeneggs.Users.Model.Auth.JwtResponse;
-import com.goldeneggs.Users.Model.User.Usuario;
+import com.goldeneggs.Users.Model.User.User;
 import com.goldeneggs.Users.Service.User.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import java.security.Principal;
 @CrossOrigin("*")
 public class AuthenticationController {
 
-    //@Autowired
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
@@ -31,9 +31,9 @@ public class AuthenticationController {
     private JwtUtils jwtUtils;
 
     @PostMapping("/generate-token")
-    public ResponseEntity<?> generarToken(@RequestBody JwtRequest jwtRequest) throws Exception {
+    public ResponseEntity<?> generateToken(@RequestBody JwtRequest jwtRequest) throws Exception {
         try{
-            autenticar(jwtRequest.getUsername(),jwtRequest.getPassword());
+            authenticate(jwtRequest.getUsername(),jwtRequest.getPassword());
         }catch (Exception exception){
             exception.printStackTrace();
             throw new Exception("Usuario no encontrado");
@@ -43,7 +43,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(new JwtResponse(token));
     }
 
-    private void autenticar(String username,String password) throws Exception {
+    private void authenticate(String username,String password) throws Exception {
         try{
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,password));
         }catch (DisabledException exception){
@@ -53,8 +53,8 @@ public class AuthenticationController {
         }
     }
 
-    @GetMapping("/actual-usuario")
-    public Usuario obtenerUsuarioActual(Principal principal){
-        return (Usuario) this.userDetailsService.loadUserByUsername(principal.getName());
+    @GetMapping("/current-user")
+    public User getCurrentUser(Principal principal){
+        return (User) this.userDetailsService.loadUserByUsername(principal.getName());
     }
 }

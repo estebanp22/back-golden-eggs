@@ -1,5 +1,6 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Inventory.Inventory;
 import com.goldeneggs.Supplier.Supplier;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,9 +48,19 @@ public class Egg implements Serializable {
     @Column(nullable = false)
     private String category;
 
-
+    /**
+     * Supplier providing the product.
+     */
     @ManyToOne
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
+
+
+    /**
+     * Inventory item to which this egg belongs.
+     */
+    @ManyToOne
+    @JoinColumn(name = "inventory_id")
+    private Inventory inventory;
 
 }

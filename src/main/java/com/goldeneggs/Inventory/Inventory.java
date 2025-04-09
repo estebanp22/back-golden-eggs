@@ -1,10 +1,12 @@
 package com.goldeneggs.Inventory;
 
+import com.goldeneggs.Egg.Egg;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Represents an inventory item in the system.
@@ -47,8 +49,9 @@ public class Inventory implements Serializable {
     private Date entryDate;
 
     /**
-     * Supplier providing the product.
+     * List of eggs associated with this inventory item.
      */
-    @Column(nullable = false)
-    private String supplier;
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Egg> eggs;
+
 }

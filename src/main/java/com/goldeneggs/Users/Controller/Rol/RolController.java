@@ -1,7 +1,7 @@
 package com.goldeneggs.Users.Controller.Rol;
 
-import com.goldeneggs.Users.Model.Rol.Rol;
-import com.goldeneggs.Users.Service.Rol.RolService;
+import com.goldeneggs.Users.Model.Rol.Role;
+import com.goldeneggs.Users.Service.Rol.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,29 +11,29 @@ import java.util.List;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/api/v1/rol")
+@RequestMapping("/api/v1/role")
 public class RolController {
 
     @Autowired
-    RolService rolService;
+    RoleService roleService;
 
 
     /**
      *
-     * @param rol
+     * @param role
      *
      * {
-     *     "rolNombre":"Gestor Documental"
+     *     "rolName":"Empleado"
      * }
      *
      *
-     * @return
+     * @return Ok or BadRequest
      */
     @PostMapping("/save")
-    public ResponseEntity<Rol> save(@RequestBody Rol rol) {
+    public ResponseEntity<Role> save(@RequestBody Role role) {
         try{
-            Rol newRol = rolService.insert(rol);
-            return ResponseEntity.ok(newRol);
+            Role newRole = roleService.insert(role);
+            return ResponseEntity.ok(newRole);
         }catch(Exception e){
             return ResponseEntity.badRequest().body(null);
         }
@@ -43,9 +43,9 @@ public class RolController {
 
 
     @GetMapping("/getAll")
-    public ResponseEntity<List<Rol>> getAll() {
+    public ResponseEntity<List<Role>> getAll() {
         try{
-            List<Rol>roles = rolService.getAll();
+            List<Role>roles = roleService.getAll();
             return ResponseEntity.ok(roles);
 
         }catch(Exception e){

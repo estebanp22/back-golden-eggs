@@ -1,5 +1,7 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Customer.Customer;
+import com.goldeneggs.Egg.Egg;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
