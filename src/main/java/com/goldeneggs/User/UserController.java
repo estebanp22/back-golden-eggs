@@ -1,26 +1,12 @@
-package com.goldeneggs.Users.Controller.User;
+package com.goldeneggs.User;
 
-import com.goldeneggs.Users.Model.Role.Role;
-import com.goldeneggs.Users.Model.User.User;
-import com.goldeneggs.Users.Model.User.UserRole;
-import com.goldeneggs.Users.Service.Role.RoleService;
-import com.goldeneggs.Users.Service.User.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/user")
 @CrossOrigin("*")
 public class UserController {
-
+/*
     @Autowired
     private UserService userService;
 
@@ -43,6 +29,8 @@ public class UserController {
      *                 recordar que username siempre es el mismo número de documento, así mismo la contraseña, ya que el usuario debe cambiarla en el login
      * @return Ok or Internal Error
      */
+
+    /*
     @PostMapping("/save/{rol_id}")
     public ResponseEntity<User> save(@RequestBody User user, @PathVariable Long rol_id) {
         try {
@@ -94,7 +82,7 @@ public class UserController {
      * @param username Activa a un administrador cambiando el atributo enabled a true permitiéndole iniciar sesión de nuevo
      * @return Ok, not found or Internal Error
      */
-
+/*
     @PutMapping("/active/{username}")
     public ResponseEntity<User> activeUser(@PathVariable String username) {
         try {
@@ -113,6 +101,7 @@ public class UserController {
      * @param username
      * @return Desactiva a un administrador cambiando el atributo enabled a false, esto impide que el administrador pueda iniciar sesión.
      */
+    /*
     @PutMapping("/disable/{username}")
     public ResponseEntity<User> delete(@PathVariable String username) {
         try {
@@ -158,6 +147,7 @@ public class UserController {
      * @param requestBody La nueva contraseña enviada en el cuerpo de la solicitud.
      * @return ResponseEntity con el estado de la operación y, si es exitoso, el usuario actualizado.
      */
+    /*
     @PutMapping("/updatePasswordModule/{username}")
     public ResponseEntity<?> updatePasswordModule(
             @PathVariable String username,
@@ -184,7 +174,8 @@ public class UserController {
 
         } /*catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } */catch (Exception e) {
+        } */
+    /*catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error inesperado al actualizar la contraseña. Contacte al administrador.");
         }
@@ -202,6 +193,7 @@ public class UserController {
      *                 }
      * @return
      */
+    /*
 
     @PutMapping("/update/{username}/{rolID}")
     public ResponseEntity<?> update(@PathVariable String username, @RequestBody User user, @PathVariable long rolID) {
@@ -222,9 +214,12 @@ public class UserController {
 
         } /*catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }*/catch (Exception ex) {
+        }*/
+    /*catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al actualizar el usuario: " + ex.getMessage());
         }
     }
+
+     */
 
 }

@@ -1,25 +1,13 @@
-package com.goldeneggs.Users.Service.User;
+package com.goldeneggs.User;
 
 
-import com.goldeneggs.Users.Model.Role.Role;
-import com.goldeneggs.Users.Model.User.User;
-import com.goldeneggs.Users.Model.User.UserRole;
-import com.goldeneggs.Users.Repository.Role.RoleRepository;
-import com.goldeneggs.Users.Repository.User.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.security.SecureRandom;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
-public class UserServiceImpl implements UserService {
-
+public class UserServiceImpl
+        //implements UserService
+{
+/*
     @Autowired
     private UserRepository userRepository;
 
@@ -116,6 +104,8 @@ public class UserServiceImpl implements UserService {
         return user;
 
          */
+
+    /*
         return null;
     }
 
@@ -166,4 +156,5 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+    */
 }

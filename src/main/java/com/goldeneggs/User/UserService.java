@@ -1,16 +1,13 @@
-package com.goldeneggs.Users.Service.User;
+package com.goldeneggs.User;
 
 
-import com.goldeneggs.Users.Model.Role.Role;
-import com.goldeneggs.Users.Model.User.User;
-import com.goldeneggs.Users.Model.User.UserRole;
+import com.goldeneggs.Role.Role;
 
 import java.util.List;
-import java.util.Set;
 
 public interface UserService {
 
-    User saveUser(User user, Set<UserRole> userRoles) throws Exception;
+    //User saveUser(User user, Set<UserRole> userRoles) throws Exception;
 
     void save(User user) throws Exception;
 

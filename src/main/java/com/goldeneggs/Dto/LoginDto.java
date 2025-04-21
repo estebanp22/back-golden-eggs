@@ -1,12 +1,9 @@
-package com.goldeneggs.Users.Model.Auth;
+package com.goldeneggs.Dto;
 
 import lombok.Data;
 
 @Data
-public class JwtRequest {
-
+public class LoginDto {
     private String username;
     private String password;
-
-
 }

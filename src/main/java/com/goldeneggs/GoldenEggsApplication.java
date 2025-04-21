@@ -1,19 +1,9 @@
 package com.goldeneggs;
 
-import com.goldeneggs.Users.Model.Role.Role;
-import com.goldeneggs.Users.Model.User.User;
-import com.goldeneggs.Users.Model.User.UserRole;
-import com.goldeneggs.Users.Service.Role.RoleService;
-import com.goldeneggs.Users.Service.User.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @SpringBootApplication
 public class GoldenEggsApplication implements CommandLineRunner {
@@ -22,14 +12,6 @@ public class GoldenEggsApplication implements CommandLineRunner {
 		SpringApplication.run(GoldenEggsApplication.class, args);
 	}
 
-	@Autowired
-	private UserService userService;
-
-	@Autowired
-	private RoleService roleService;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Override
 	@Transactional

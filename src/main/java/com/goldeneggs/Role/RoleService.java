@@ -1,7 +1,5 @@
-package com.goldeneggs.Users.Service.Role;
+package com.goldeneggs.Role;
 
-
-import com.goldeneggs.Users.Model.Role.Role;
 
 import java.util.List;
 
