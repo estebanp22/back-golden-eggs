@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -22,7 +23,7 @@ public class User implements  UserDetails {
     @Column(name = "name", nullable = false)
     private String name;
     @Column(name = "phone_number", unique = true, nullable = false)
-    private String phoneNumbre;
+    private String phoneNumber;
     @Column(name = "email", unique = true, nullable = false)
     private String email;
     @Column(name = "username", unique = true, nullable = false)
@@ -80,6 +81,20 @@ public class User implements  UserDetails {
     @Override
     public String getUsername(){
         return this.username;
+    }
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id.equals(user.id) && username.equals(user.username);
     }
 }
 

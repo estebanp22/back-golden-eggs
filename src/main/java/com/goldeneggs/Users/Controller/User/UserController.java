@@ -1,9 +1,9 @@
 package com.goldeneggs.Users.Controller.User;
 
-import com.goldeneggs.Users.Model.Rol.Role;
+import com.goldeneggs.Users.Model.Role.Role;
 import com.goldeneggs.Users.Model.User.User;
 import com.goldeneggs.Users.Model.User.UserRole;
-import com.goldeneggs.Users.Service.Rol.RoleService;
+import com.goldeneggs.Users.Service.Role.RoleService;
 import com.goldeneggs.Users.Service.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

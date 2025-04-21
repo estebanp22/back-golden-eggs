@@ -1,7 +1,7 @@
-package com.goldeneggs.Users.Service.Rol;
+package com.goldeneggs.Users.Service.Role;
 
-import com.goldeneggs.Users.Model.Rol.Role;
-import com.goldeneggs.Users.Repository.Rol.RoleRepository;
+import com.goldeneggs.Users.Model.Role.Role;
+import com.goldeneggs.Users.Repository.Role.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

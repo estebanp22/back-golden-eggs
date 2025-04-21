@@ -1,7 +1,7 @@
 package com.goldeneggs.Users.Service.User;
 
 
-import com.goldeneggs.Users.Model.Rol.Role;
+import com.goldeneggs.Users.Model.Role.Role;
 import com.goldeneggs.Users.Model.User.User;
 import com.goldeneggs.Users.Model.User.UserRole;
 

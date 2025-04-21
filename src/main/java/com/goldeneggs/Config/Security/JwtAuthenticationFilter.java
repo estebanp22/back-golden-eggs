@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtil;
 
-    private final String secretKey = "pass";
+    private final String secretKey = "82edaeb856e5f9069faae0a2ff9899fc";
 
 
     @Override

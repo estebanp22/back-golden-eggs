@@ -1,4 +1,4 @@
-package com.goldeneggs.Users.Model.Rol;
+package com.goldeneggs.Users.Model.Role;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,12 +18,13 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
     private Long roleId;
+
     @Column(name = "role_name", unique = true, nullable = false)
     private String roleName;
 
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "role")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "role")
     private Set<UserRole> usersRole = new HashSet<>();
 
-
 }
+

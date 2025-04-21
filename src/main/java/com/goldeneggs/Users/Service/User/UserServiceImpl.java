@@ -1,10 +1,10 @@
 package com.goldeneggs.Users.Service.User;
 
 
-import com.goldeneggs.Users.Model.Rol.Role;
+import com.goldeneggs.Users.Model.Role.Role;
 import com.goldeneggs.Users.Model.User.User;
 import com.goldeneggs.Users.Model.User.UserRole;
-import com.goldeneggs.Users.Repository.Rol.RoleRepository;
+import com.goldeneggs.Users.Repository.Role.RoleRepository;
 import com.goldeneggs.Users.Repository.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

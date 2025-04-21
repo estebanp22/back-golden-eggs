@@ -1,7 +1,7 @@
-package com.goldeneggs.Users.Controller.Rol;
+package com.goldeneggs.Users.Controller.Role;
 
-import com.goldeneggs.Users.Model.Rol.Role;
-import com.goldeneggs.Users.Service.Rol.RoleService;
+import com.goldeneggs.Users.Model.Role.Role;
+import com.goldeneggs.Users.Service.Role.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
