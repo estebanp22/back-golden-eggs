@@ -1,34 +1,29 @@
 package com.goldeneggs.User;
 
 
+import com.goldeneggs.Dto.RegisterDto;
+import com.goldeneggs.Dto.UpdateUserDto;
 import com.goldeneggs.Role.Role;
 
 import java.util.List;
 
 public interface UserService {
 
-    //User saveUser(User user, Set<UserRole> userRoles) throws Exception;
+    User save(RegisterDto registerDto) throws Exception;
 
-    void save(User user) throws Exception;
-
-    User getUser(String username);
-
-    User getUserByEmail(String email);
+    User getUserById(Long id);
 
     List<User> getAllUsers();
 
-    void deleteUser(Long userId);
+    void deleteUser(Long id);
 
-    User updateUser(String username, User newUser, Role role);
+    User updateUser(Long id, UpdateUserDto updateUserDto);
 
-    User disableUser(User user);
+    User disableUser(Long id);
 
-    User updatePassword(User user, String emailRequest);
+    User updatePassword(Long userId, String newPassword);
 
-    User activateUser(User user);
-
-    User updatePasswordModule(User user, String newPassword);
-
+    User activateUser(Long id);
 }
 
 

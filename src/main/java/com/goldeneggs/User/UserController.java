@@ -1,225 +1,113 @@
 package com.goldeneggs.User;
 
+import com.goldeneggs.Dto.RegisterDto;
+import com.goldeneggs.Dto.UpdateUserDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/user")
 @CrossOrigin("*")
 public class UserController {
-/*
+
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private RoleService roleService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-
     /**
-     * @param user{ "documento":"14703892",
-     *                 "email":"izquierdin666@hotmail.com",
-     *                 "nombre":"Andrés Izquierdo",
-     *                 "enabled":1
-     *                 }
-     * @param rol_id   /api/v1/user/save/2
-     *                 <p>
-     *                 Guarda a un nuevo administrador asignandole el rol
-     *                 recordar que username siempre es el mismo número de documento, así mismo la contraseña, ya que el usuario debe cambiarla en el login
-     * @return Ok or Internal Error
-     */
-
-    /*
-    @PostMapping("/save/{rol_id}")
-    public ResponseEntity<User> save(@RequestBody User user, @PathVariable Long rol_id) {
-        try {
-            Role role = roleService.get(rol_id);
-            if (role == null) {
-                return ResponseEntity.notFound().build();
-            } else {
-                String passEncriptada = passwordEncoder.encode(user.getId().toString());
-                user.setPassword(passEncriptada);
-                user.setUsername(String.valueOf(user.getId()));
-                user.setEnabled(true);
-                UserRole userRole = new UserRole();
-                userRole.setRole(role);
-                userRole.setUser(user);
-                Set<UserRole> usersRoles = Collections.singleton(userRole);
-                User userGuardado = userService.saveUser(user, usersRoles);
-                return ResponseEntity.ok(userGuardado);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/get/{username}")
-    public ResponseEntity<User> get(@PathVariable String username) {
-        try {
-            User user = userService.getUser(username);
-            if (user == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/getAll")
-    public ResponseEntity<List<User>> getAll() {
-        try {
-            List<User> users = userService.getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-
-    /**
-     * @param username Activa a un administrador cambiando el atributo enabled a true permitiéndole iniciar sesión de nuevo
-     * @return Ok, not found or Internal Error
-     */
-/*
-    @PutMapping("/active/{username}")
-    public ResponseEntity<User> activeUser(@PathVariable String username) {
-        try {
-            User user = userService.getUser(username);
-            if (user == null) {
-                return ResponseEntity.notFound().build();
-            }
-            userService.activateUser(user);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * @param username
-     * @return Desactiva a un administrador cambiando el atributo enabled a false, esto impide que el administrador pueda iniciar sesión.
-     */
-    /*
-    @PutMapping("/disable/{username}")
-    public ResponseEntity<User> delete(@PathVariable String username) {
-        try {
-            User user = userService.getUser(username);
-            if (user == null) {
-                return ResponseEntity.notFound().build();
-            }
-            userService.disableUser(user);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PutMapping("/updatePassword/{username}")
-    public ResponseEntity<?> updatePassword(@PathVariable String username, @RequestBody Map<String, String> request) {
-        try {
-            User user = userService.getUser(username);
-            if (user == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            String email = request.get("email");
-            User newUser = userService.updatePassword(user, email);
-
-            return ResponseEntity.ok(newUser);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            // Deja un log de la excepción para saber qué pasó
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado.");
-        }
-    }
-
-
-
-    /**
-     * Endpoint para actualizar la contraseña de un usuario.
-     * Este endpoint es accesible desde el módulo de login cuando el usuario solicita la recuperación de su contraseña.
+     * Registers a new user.
      *
-     * @param username El nombre de usuario cuyo password será actualizado.
-     * @param requestBody La nueva contraseña enviada en el cuerpo de la solicitud.
-     * @return ResponseEntity con el estado de la operación y, si es exitoso, el usuario actualizado.
+     * @param registerDto the data for registering a new user.
+     * @return the created user.
      */
-    /*
-    @PutMapping("/updatePasswordModule/{username}")
-    public ResponseEntity<?> updatePasswordModule(
-            @PathVariable String username,
-            @RequestBody Map<String, String> requestBody) {
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@RequestBody RegisterDto registerDto) {
         try {
-            // Validar que la nueva contraseña está presente en el cuerpo de la solicitud
-            String newPassword = requestBody.get("password");
-            if (newPassword == null || newPassword.isBlank()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("La nueva contraseña es obligatoria.");
-            }
-
-            // Obtener el usuario basado en el username
-            User user = userService.getUser(username);
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Usuario no encontrado con el username: " + username);
-            }
-
-            // Actualizar la contraseña del usuario
-            User userUpdated = userService.updatePasswordModule(user, newPassword);
-
-            return ResponseEntity.ok(userUpdated);
-
-        } /*catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } */
-    /*catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error inesperado al actualizar la contraseña. Contacte al administrador.");
+            return ResponseEntity.ok(userService.save(registerDto));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
-
 
     /**
-     * @param username
-     * @param user
-     * @param rolID    {
-     *                 "documento":"14703892",
-     *                 "email":"izquierdin666@hotmail.com",
-     *                 "nombre":"Andrés Izquierdo",
-     *                 "enabled":1
-     *                 }
-     * @return
+     * Retrieves a user by their ID.
+     *
+     * @param id the ID of the user.
+     * @return the user with the specified ID.
      */
-    /*
-
-    @PutMapping("/update/{username}/{rolID}")
-    public ResponseEntity<?> update(@PathVariable String username, @RequestBody User user, @PathVariable long rolID) {
-        try {
-            User userExisting = userService.getUser(username);
-            if (userExisting == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
-            }
-
-            Role role = roleService.get(rolID);
-
-            if (role == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Rol no encontrado");
-            }
-
-            User newUser = userService.updateUser(username, user, role);
-            return ResponseEntity.ok(newUser);
-
-        } /*catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }*/
-    /*catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al actualizar el usuario: " + ex.getMessage());
-        }
+    @GetMapping("/get/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    /**
+     * Retrieves all users.
+     *
+     * @return list of all users.
      */
+    @GetMapping("/getAll")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
 
+    /**
+     * Updates a user with the provided data.
+     *
+     * @param id            the ID of the user to update.
+     * @param updateUserDto the updated user information.
+     * @return the updated user.
+     */
+    @PutMapping("/update/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UpdateUserDto updateUserDto) {
+        return ResponseEntity.ok(userService.updateUser(id, updateUserDto));
+    }
+
+    /**
+     * Updates the password for a user.
+     *
+     * @param id          the ID of the user.
+     * @param newPassword the new password.
+     * @return the updated user with the new password.
+     */
+    @PatchMapping("/updatepass/{id}/password")
+    public ResponseEntity<User> updatePassword(@PathVariable Long id, @RequestBody String newPassword) {
+        return ResponseEntity.ok(userService.updatePassword(id, newPassword));
+    }
+
+    /**
+     * Disables a user by ID.
+     *
+     * @param id the ID of the user to disable.
+     * @return the disabled user.
+     */
+    @PatchMapping("/{id}/disable")
+    public ResponseEntity<User> disableUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.disableUser(id));
+    }
+
+    /**
+     * Enables a user by ID.
+     *
+     * @param id the ID of the user to enable.
+     * @return the enabled user.
+     */
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<User> activateUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.activateUser(id));
+    }
+
+    /**
+     * Deletes a user by ID.
+     *
+     * @param id the ID of the user to delete.
+     * @return HTTP 204 No Content status.
+     */
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
 }
+

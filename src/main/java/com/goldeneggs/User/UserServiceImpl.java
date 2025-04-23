@@ -1,13 +1,22 @@
 package com.goldeneggs.User;
 
 
+import com.goldeneggs.Dto.RegisterDto;
+import com.goldeneggs.Dto.UpdateUserDto;
+import com.goldeneggs.Exceptions.ResourceNotFoundException;
+import com.goldeneggs.Exceptions.UserAlreadyExistsException;
+import com.goldeneggs.Role.Role;
+import com.goldeneggs.Role.RoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+
 @Service
-public class UserServiceImpl
-        //implements UserService
-{
-/*
+public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository userRepository;
 
@@ -17,144 +26,187 @@ public class UserServiceImpl
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Registers a new user if the username and ID do not already exist.
+     *
+     * @param registerDto Data transfer object containing user registration data.
+     * @return The saved User entity.
+     * @throws UserAlreadyExistsException if the username or ID already exists.
+     * @throws ResourceNotFoundException if the specified role is not found.
+     */
     @Override
-    public User saveUser(User user, Set<UserRole> userRoles) throws Exception {
-        User userLocal = userRepository.findByUsername(user.getUsername());
-        if (userLocal != null) {
-            throw new Exception("The user is already present");
-        } else {
-            for (UserRole userRole : userRoles) {
-                roleRepository.save(userRole.getRole());
-            }
-            user.getUserRoles().addAll(userRoles);
-            userLocal = userRepository.save(user);
+    public User save(RegisterDto registerDto) {
+
+        if (userRepository.existsByUsername(registerDto.getUsername())) {
+            throw new UserAlreadyExistsException("A user with the username '" + registerDto.getUsername() + "' already exists.");
         }
-        return userLocal;
+
+        if (userRepository.existsById(registerDto.getId())) {
+            throw new UserAlreadyExistsException("A user with the ID '" + registerDto.getId() + "' already exists.");
+        }
+
+        User user = new User();
+        user.setUsername(registerDto.getUsername());
+        user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+        user.setId(registerDto.getId());
+        user.setAddress(registerDto.getAddress());
+        user.setEmail(registerDto.getEmail());
+        user.setEnabled(true);
+        user.setPhoneNumber(registerDto.getPhoneNumber());
+        user.setName(registerDto.getName());
+
+        Role role = getRoleOrThrow(registerDto.getRoleId());
+        user.setRoles(Collections.singletonList(role));
+
+        return userRepository.save(user);
     }
 
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param id The ID of the user.
+     * @return The User entity.
+     * @throws ResourceNotFoundException if no user with the given ID is found.
+     */
     @Override
-    public void save(User user) throws Exception {
-        userRepository.save(user);
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
     }
 
-    @Override
-    public User getUser(String username) {
-        return userRepository.findByUsername(username);
-    }
-
+    /**
+     * Deletes a user by ID.
+     *
+     * @param userId The ID of the user to delete.
+     * @throws ResourceNotFoundException if no user with the given ID is found.
+     */
     @Override
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
         userRepository.deleteById(userId);
     }
 
+    /**
+     * Updates an existing user's information. Only non-null and non-blank fields will be updated.
+     *
+     * @param id The ID of the user to update.
+     * @param updateUserDto DTO containing the new data.
+     * @return The updated User entity.
+     * @throws ResourceNotFoundException if no user or specified role is found.
+     */
     @Override
-    public User updateUser(String username, User newUser, Role role) {
-        User user = userRepository.findByUsername(username);
+    public User updateUser(Long id, UpdateUserDto updateUserDto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
-        UserRole existingUserRole = user.getUserRoles().iterator().next();
-
-        existingUserRole.setRole(role);
-
-        user.setUsername(newUser.getUsername());
-        user.setEmail(newUser.getEmail());
-        return userRepository.save(user);
-    }
-
-    @Override
-    public User disableUser(User user) {
-        user.setEnabled(false);
-
-        return userRepository.save(user);
-    }
-
-    @Override
-    public User updatePassword(User user, String requestedEmail)
-    //throws MessagingException, javax.mail.MessagingException
-    {
-        // Validate if the email doesn't match and throw exception
-
-        /*
-        if (!Objects.equals(requestedEmail, user.getEmail())) {
-            throw new IllegalArgumentException("The provided email does not match the user's email.");
+        if (updateUserDto.getUsername() != null && !updateUserDto.getUsername().isBlank()) {
+            if (userRepository.existsByUsername(updateUserDto.getUsername()) && !user.getUsername().equals(updateUserDto.getUsername())) {
+                throw new UserAlreadyExistsException("A user with the username '" + updateUserDto.getUsername() + "' already exists.");
+            }
+            user.setUsername(updateUserDto.getUsername());
         }
 
-        // Generate and encrypt new password
-        String newPassword = this.generateRandomString();
-        String encryptedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encryptedPassword);
-
-        // Build email message
-        String subject = "Password Recovery";
-        String emailBody = new StringBuilder()
-                .append("Estimado(a) ").append(usuario.getNombre()).append(",\n\n")
-                .append("Se ha realizado un cambio de contraseña en su cuenta de Golden Eggs.\n\n")
-                .append("Si usted no ha solicitado este cambio, por favor contacte con el administrador del sistema: ")
-                .append("d.co\n\n")
-                .append("Gracias por utilizar nuestros servicios. Su nueva contraseña temporal es: ")
-                .append(nuevaContrasena)
-                .toString();
-
-        // Send email
-        emailService.sendHtmlEmail(user.getEmail(), subject, emailBody);
-
-        // Save the user with the new password
-        userRepository.save(user);
-
-        return user;
-
-         */
-
-    /*
-        return null;
-    }
-
-    @Override
-    public User getUserByEmail(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user.orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
-    }
-
-    private String generateRandomString() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        int minLength = 8;
-        SecureRandom random = new SecureRandom();
-        StringBuilder randomString = new StringBuilder(minLength);
-
-        for (int i = 0; i < minLength; i++) {
-            int index = random.nextInt(characters.length());
-            randomString.append(characters.charAt(index));
+        if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
         }
-        return randomString.toString();
-    }
 
-    @Override
-    public User activateUser(User user) {
-        user.setEnabled(true);
+        if (updateUserDto.getName() != null && !updateUserDto.getName().isBlank()) {
+            user.setName(updateUserDto.getName());
+        }
+
+        if (updateUserDto.getPhoneNumber() != null && !updateUserDto.getPhoneNumber().isBlank()) {
+            user.setPhoneNumber(updateUserDto.getPhoneNumber());
+        }
+
+        if (updateUserDto.getEmail() != null && !updateUserDto.getEmail().isBlank()) {
+            user.setEmail(updateUserDto.getEmail());
+        }
+
+        if (updateUserDto.getAddress() != null && !updateUserDto.getAddress().isBlank()) {
+            user.setAddress(updateUserDto.getAddress());
+        }
+
+        if (updateUserDto.getRoleId() != null) {
+            Role newRole = getRoleOrThrow(updateUserDto.getRoleId());
+            user.setRoles(Collections.singletonList(newRole));
+        }
 
         return userRepository.save(user);
     }
 
+    /**
+     * Disables a user account.
+     *
+     * @param id The ID of the user to disable.
+     * @return The updated User entity with the disabled status.
+     * @throws ResourceNotFoundException if no user with the given ID is found.
+     */
     @Override
-    public User updatePasswordModule(User user, String newPassword) {
-        // Validate that the user exists
-        User oldUser = this.getUser(user.getUsername());
-        if (oldUser == null) {
-            //throw new ResourceNotFoundException("Usuario no encontrado con el username: " + user.getUsername());
-        }
-
-        // Encrypt the new password
-        String encryptedPassword = passwordEncoder.encode(newPassword);
-        assert oldUser != null;
-        oldUser.setPassword(encryptedPassword);
-
-        // Save the updated user in the database
-        return userRepository.save(oldUser);
+    public User disableUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+        user.disabled();
+        return userRepository.save(user);
     }
 
+    /**
+     * Activates a previously disabled user account.
+     *
+     * @param id The ID of the user to activate.
+     * @return The updated User entity with the enabled status.
+     * @throws ResourceNotFoundException if no user with the given ID is found.
+     */
+    @Override
+    public User activateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+        user.enabled();
+        return userRepository.save(user);
+    }
+
+    /**
+     * Updates the password of an existing user.
+     *
+     * @param userId The ID of the user whose password will be updated.
+     * @param newPassword The new password to be set.
+     * @return The updated User entity.
+     * @throws ResourceNotFoundException if the user is not found.
+     * @throws IllegalArgumentException if the new password is null or blank.
+     */
+    @Override
+    public User updatePassword(Long userId, String newPassword) {
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("New password must not be null or blank.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Retrieves a list of all users.
+     *
+     * @return A list of all User entities.
+     */
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-    */
+
+    /**
+     * Helper method to find a role by ID or throw an exception if not found.
+     *
+     * @param roleId The ID of the role.
+     * @return The Role entity.
+     * @throws ResourceNotFoundException if the role is not found.
+     */
+    private Role getRoleOrThrow(Long roleId) {
+        return roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
+    }
 }

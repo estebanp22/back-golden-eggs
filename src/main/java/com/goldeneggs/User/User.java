@@ -37,6 +37,14 @@ public class User {
     public User() {
     }
 
+    public void enabled (){
+        this.enabled = true;
+    }
+
+    public void disabled (){
+        this.enabled = false;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(id, username);
