@@ -1,7 +1,7 @@
 package com.goldeneggs.Order;
 
-import com.goldeneggs.Customer.Customer;
 import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.User.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
@@ -30,7 +30,7 @@ public class Order {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    private User user;
 
     /**
      * List of eggs included in the order.

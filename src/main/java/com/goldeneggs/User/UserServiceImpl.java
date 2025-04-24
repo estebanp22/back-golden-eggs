@@ -3,8 +3,8 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
-import com.goldeneggs.Exceptions.ResourceNotFoundException;
-import com.goldeneggs.Exceptions.UserAlreadyExistsException;
+import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Exception.UserAlreadyExistsException;
 import com.goldeneggs.Role.Role;
 import com.goldeneggs.Role.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;

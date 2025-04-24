@@ -1,4 +1,4 @@
-package com.goldeneggs.Exceptions;
+package com.goldeneggs.Exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

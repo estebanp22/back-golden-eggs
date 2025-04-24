@@ -2,7 +2,7 @@ package com.goldeneggs.Pay;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.goldeneggs.Bill.Bill;
-import com.goldeneggs.Customer.Customer;
+import com.goldeneggs.User.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,7 +29,7 @@ public class Pay implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
     @JsonIgnoreProperties("pays")
-    private Customer customer;
+    private User user;
 
     /**
      * Bill associated with this payment.

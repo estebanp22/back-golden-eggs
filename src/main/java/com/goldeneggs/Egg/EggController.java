@@ -35,9 +35,7 @@ public class EggController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Egg> get(@PathVariable Long id) {
-        Egg egg = eggService.get(id);
-        if (egg == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(egg);
+        return ResponseEntity.ok(eggService.get(id));
     }
 
     /**
@@ -59,9 +57,7 @@ public class EggController {
      */
     @PutMapping("/update/{id}")
     public ResponseEntity<Egg> update(@PathVariable Long id, @RequestBody Egg egg) {
-        Egg updated = eggService.update(id, egg);
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(eggService.update(id, egg));
     }
 
     /**
@@ -71,7 +67,7 @@ public class EggController {
      * @return HTTP 200 if deleted.
      */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         eggService.delete(id);
         return ResponseEntity.ok().build();
     }

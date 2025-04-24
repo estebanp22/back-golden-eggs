@@ -1,4 +1,4 @@
-package com.goldeneggs.Exceptions;
+package com.goldeneggs.Exception;
 
 import java.time.LocalDateTime;
 

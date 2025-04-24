@@ -1,4 +1,4 @@
-package com.goldeneggs.Exceptions;
+package com.goldeneggs.Exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

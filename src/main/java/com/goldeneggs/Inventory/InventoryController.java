@@ -1,5 +1,7 @@
 package com.goldeneggs.Inventory;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +21,9 @@ public class InventoryController {
     /**
      * Saves a new inventory item.
      *
-     * @param inventory Inventory data.
-     * @return Saved inventory item.
+     * @param inventory Inventory data to be saved.
+     * @return ResponseEntity containing the saved inventory item.
+     * @throws BadRequestException If the provided inventory data is invalid.
      */
     @PostMapping("/save")
     public ResponseEntity<Inventory> save(@RequestBody Inventory inventory) {
@@ -28,10 +31,11 @@ public class InventoryController {
     }
 
     /**
-     * Retrieves an inventory item by ID.
+     * Retrieves an inventory item by its ID.
      *
-     * @param id Inventory ID.
-     * @return Inventory item.
+     * @param id The ID of the inventory item to retrieve.
+     * @return ResponseEntity containing the inventory item if found, or 404 Not Found if not.
+     * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Inventory> get(@PathVariable Long id) {
@@ -43,7 +47,7 @@ public class InventoryController {
     /**
      * Retrieves all inventory items.
      *
-     * @return List of inventory items.
+     * @return ResponseEntity containing a list of all inventory items.
      */
     @GetMapping("/getAll")
     public ResponseEntity<List<Inventory>> getAll() {
@@ -53,9 +57,10 @@ public class InventoryController {
     /**
      * Updates an existing inventory item.
      *
-     * @param id Inventory ID.
-     * @param inventory Updated inventory data.
-     * @return Updated inventory item.
+     * @param id The ID of the inventory item to update.
+     * @param inventory The updated inventory data.
+     * @return ResponseEntity containing the updated inventory item, or 404 Not Found if the item does not exist.
+     * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @PutMapping("/update/{id}")
     public ResponseEntity<Inventory> update(@PathVariable Long id, @RequestBody Inventory inventory) {
@@ -65,10 +70,11 @@ public class InventoryController {
     }
 
     /**
-     * Deletes an inventory item by ID.
+     * Deletes an inventory item by its ID.
      *
-     * @param id Inventory ID.
-     * @return HTTP 200 if deleted.
+     * @param id The ID of the inventory item to delete.
+     * @return ResponseEntity with HTTP 200 if the item was successfully deleted, or 404 if not found.
+     * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {

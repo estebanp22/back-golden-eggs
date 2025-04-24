@@ -1,5 +1,6 @@
 package com.goldeneggs.Supplier;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,11 @@ public class SupplierController {
      */
     @PostMapping("/save")
     public ResponseEntity<Supplier> save(@RequestBody Supplier supplier) {
-        return ResponseEntity.ok(supplierService.save(supplier));
+        try {
+            return ResponseEntity.ok(supplierService.save(supplier));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
@@ -35,9 +40,11 @@ public class SupplierController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Supplier> get(@PathVariable Long id) {
-        Supplier supplier = supplierService.get(id);
-        if (supplier == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(supplier);
+        try {
+            return ResponseEntity.ok(supplierService.get(id));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -59,9 +66,11 @@ public class SupplierController {
      */
     @PutMapping("/update/{id}")
     public ResponseEntity<Supplier> update(@PathVariable Long id, @RequestBody Supplier updated) {
-        Supplier supplier = supplierService.update(id, updated);
-        if (supplier == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(supplier);
+        try {
+            return ResponseEntity.ok(supplierService.update(id, updated));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -72,8 +81,11 @@ public class SupplierController {
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        supplierService.delete(id);
-        return ResponseEntity.ok().build();
+        try {
+            supplierService.delete(id);
+            return ResponseEntity.ok().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
-

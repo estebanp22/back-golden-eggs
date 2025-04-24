@@ -1,5 +1,6 @@
 package com.goldeneggs.Bill;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,20 +8,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST controller for managing bills.
+ * REST controller for managing {@link Bill} resources.
  */
 @RestController
 @RequestMapping("/api/v1/bill")
+@CrossOrigin("*")
 public class BillController {
 
     @Autowired
     private BillService billService;
 
     /**
-     * Saves a new bill.
+     * Creates and saves a new bill.
      *
-     * @param bill The bill to save.
-     * @return The saved bill.
+     * @param bill The bill to be saved.
+     * @return The saved {@link Bill} entity.
      */
     @PostMapping("/save")
     public ResponseEntity<Bill> save(@RequestBody Bill bill) {
@@ -28,22 +30,21 @@ public class BillController {
     }
 
     /**
-     * Gets a bill by its ID.
+     * Retrieves a bill by its ID.
      *
-     * @param id Bill ID.
-     * @return The bill if found.
+     * @param id The ID of the bill.
+     * @return The {@link Bill} with the given ID.
+     * @throws ResourceNotFoundException if the bill is not found.
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Bill> get(@PathVariable Long id) {
-        Bill bill = billService.get(id);
-        if (bill == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(bill);
+        return ResponseEntity.ok(billService.get(id));
     }
 
     /**
-     * Gets all bills.
+     * Retrieves all bills in the system.
      *
-     * @return List of all bills.
+     * @return A list of all {@link Bill} entities.
      */
     @GetMapping("/getAll")
     public ResponseEntity<List<Bill>> getAll() {
@@ -51,29 +52,28 @@ public class BillController {
     }
 
     /**
-     * Updates a bill.
+     * Updates an existing bill with the given ID.
      *
-     * @param id ID of the bill to update.
-     * @param bill Updated bill data.
-     * @return Updated bill if found.
+     * @param id   The ID of the bill to update.
+     * @param bill The updated bill data.
+     * @return The updated {@link Bill} entity.
+     * @throws ResourceNotFoundException if the bill is not found.
      */
     @PutMapping("/update/{id}")
     public ResponseEntity<Bill> update(@PathVariable Long id, @RequestBody Bill bill) {
-        Bill updated = billService.update(id, bill);
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(billService.update(id, bill));
     }
 
     /**
-     * Deletes a bill.
+     * Deletes a bill by its ID.
      *
-     * @param id ID of the bill to delete.
-     * @return HTTP 200 if deleted.
+     * @param id The ID of the bill to delete.
+     * @return HTTP 200 OK if successfully deleted.
+     * @throws ResourceNotFoundException if the bill is not found.
      */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         billService.delete(id);
         return ResponseEntity.ok().build();
     }
 }
-

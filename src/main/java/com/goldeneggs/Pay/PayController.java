@@ -1,5 +1,6 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,20 +29,23 @@ public class PayController {
     }
 
     /**
-     * Gets a payment by its ID.
+     * Retrieves a payment by its ID.
      *
      * @param id Payment ID.
-     * @return Payment if found.
+     * @return Payment if found, or 404 Not Found.
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Pay> get(@PathVariable Long id) {
-        Pay pay = payService.get(id);
-        if (pay == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(pay);
+        try {
+            Pay pay = payService.get(id);
+            return ResponseEntity.ok(pay);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
-     * Gets all payments.
+     * Retrieves all payments.
      *
      * @return List of all payments.
      */
@@ -51,28 +55,35 @@ public class PayController {
     }
 
     /**
-     * Updates a payment.
+     * Updates an existing payment.
      *
-     * @param id ID of the payment to update.
-     * @param pay Updated data.
-     * @return Updated payment.
+     * @param id  ID of the payment to update.
+     * @param pay Updated payment data.
+     * @return Updated payment if found, or 404 Not Found.
      */
     @PutMapping("/update/{id}")
     public ResponseEntity<Pay> update(@PathVariable Long id, @RequestBody Pay pay) {
-        Pay updated = payService.update(id, pay);
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+        try {
+            Pay updated = payService.update(id, pay);
+            return ResponseEntity.ok(updated);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
-     * Deletes a payment.
+     * Deletes a payment by its ID.
      *
      * @param id Payment ID.
-     * @return HTTP 200 if deleted.
+     * @return HTTP 200 OK if deleted, or 404 Not Found.
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        payService.delete(id);
-        return ResponseEntity.ok().build();
+        try {
+            payService.delete(id);
+            return ResponseEntity.ok().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

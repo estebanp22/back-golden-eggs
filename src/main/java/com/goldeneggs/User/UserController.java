@@ -2,7 +2,9 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
+import com.goldeneggs.Exception.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +28,10 @@ public class UserController {
     public ResponseEntity<User> registerUser(@RequestBody RegisterDto registerDto) {
         try {
             return ResponseEntity.ok(userService.save(registerDto));
+        } catch (UserAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 

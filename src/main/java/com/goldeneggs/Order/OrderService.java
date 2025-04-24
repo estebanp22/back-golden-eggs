@@ -1,5 +1,9 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
+import org.apache.coyote.BadRequestException;
+import org.hibernate.service.spi.ServiceException;
+
 import java.util.List;
 
 /**
@@ -8,28 +12,36 @@ import java.util.List;
 public interface OrderService {
 
     /**
-     * Returns all orders in the system.
-     * @return list of all orders
+     * Retrieves all orders in the system.
+     *
+     * @return A list of all orders.
+     * @throws ServiceException If an error occurs while fetching the orders.
      */
     List<Order> getAllOrders();
 
     /**
      * Finds an order by its ID.
-     * @param id the ID of the order
-     * @return the order if found, otherwise null
+     *
+     * @param id The ID of the order to find.
+     * @return The order if found, otherwise throws ResourceNotFoundException.
+     * @throws ResourceNotFoundException If the order with the given ID does not exist.
      */
     Order getOrderById(Long id);
 
     /**
      * Saves a new or existing order.
-     * @param order the order to save
-     * @return the saved order
+     *
+     * @param order The order to save.
+     * @return The saved order.
+     * @throws BadRequestException If the provided order data is invalid or incomplete.
      */
-    Order saveOrder(Order order);
+    Order saveOrder(Order order) throws BadRequestException;
 
     /**
-     * Deletes an order by ID.
-     * @param id the ID of the order to delete
+     * Deletes an order by its ID.
+     *
+     * @param id The ID of the order to delete.
+     * @throws ResourceNotFoundException If the order with the given ID does not exist.
      */
     void deleteOrder(Long id);
 }

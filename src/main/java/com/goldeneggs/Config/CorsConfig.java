@@ -1,4 +1,4 @@
-package com.goldeneggs.Config.Security;
+package com.goldeneggs.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
