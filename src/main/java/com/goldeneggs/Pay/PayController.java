@@ -12,6 +12,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/pay")
+@CrossOrigin("*")
 public class PayController {
 
     @Autowired

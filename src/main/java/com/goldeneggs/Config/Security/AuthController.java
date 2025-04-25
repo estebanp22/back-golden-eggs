@@ -9,15 +9,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin("*")
 public class AuthController {
 
     @Autowired
@@ -58,10 +58,12 @@ public class AuthController {
      * @return a response confirming that the user has been logged out.
      */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        // Invalidate the authentication context on the server (not necessary with stateless JWT, but could be useful in some cases)
+    public ResponseEntity<Map<String, String>> logout() {
         SecurityContextHolder.clearContext();
 
-        return ResponseEntity.status(HttpStatus.OK).body("User logged out successfully.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User logged out successfully.");
+
+        return ResponseEntity.ok(response);
     }
 }

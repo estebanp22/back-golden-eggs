@@ -16,7 +16,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/orders")
-@CrossOrigin(origins = "*")  // Allows cross-origin requests from all origins.
+@CrossOrigin("*")
 public class OrderController {
 
     private final OrderService orderService;
