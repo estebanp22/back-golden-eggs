@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin("*")
 public class AuthController {
 
     @Autowired
@@ -33,21 +32,24 @@ public class AuthController {
      * @return a response containing the generated JWT token.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDto loginDto) {
-        // Authenticate the user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsername(),
-                        loginDto.getPassword()));
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getUsername(),
+                            loginDto.getPassword()
+                    )
+            );
 
-        // Set the authentication in the security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtGenerator.generateToken(authentication);
+            return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
 
-        // Generate the JWT token
-        String token = jwtGenerator.generateToken(authentication);
-
-        // Return the token in the response
-        return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace(); // Para ver en consola exactamente qué está fallando
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Credenciales inválidas"));
+        }
     }
 
     /**
