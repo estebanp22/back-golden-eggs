@@ -9,12 +9,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,21 +32,24 @@ public class AuthController {
      * @return a response containing the generated JWT token.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDto loginDto) {
-        // Authenticate the user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsername(),
-                        loginDto.getPassword()));
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getUsername(),
+                            loginDto.getPassword()
+                    )
+            );
 
-        // Set the authentication in the security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtGenerator.generateToken(authentication);
+            return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
 
-        // Generate the JWT token
-        String token = jwtGenerator.generateToken(authentication);
-
-        // Return the token in the response
-        return new ResponseEntity<>(new AuthResponseDTO(token), HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace(); // Para ver en consola exactamente qué está fallando
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Credenciales inválidas"));
+        }
     }
 
     /**
@@ -58,10 +60,12 @@ public class AuthController {
      * @return a response confirming that the user has been logged out.
      */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        // Invalidate the authentication context on the server (not necessary with stateless JWT, but could be useful in some cases)
+    public ResponseEntity<Map<String, String>> logout() {
         SecurityContextHolder.clearContext();
 
-        return ResponseEntity.status(HttpStatus.OK).body("User logged out successfully.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User logged out successfully.");
+
+        return ResponseEntity.ok(response);
     }
 }

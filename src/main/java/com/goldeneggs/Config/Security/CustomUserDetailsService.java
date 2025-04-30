@@ -38,6 +38,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         com.goldeneggs.User.User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User with username '" + username + "' was not found"));
 
+        System.out.println("Usuario encontrado: " + user.getUsername());  // Debug
+
+
         return new User(
                 user.getUsername(),
                 user.getPassword(),

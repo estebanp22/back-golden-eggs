@@ -11,7 +11,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/reports")
-@CrossOrigin(origins = "*")
+@CrossOrigin("*")
 public class ReportController {
 
     private final ReportService reportService;
