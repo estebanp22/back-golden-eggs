@@ -2,6 +2,7 @@ package com.goldeneggs.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.TypeEgg.TypeEgg;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,7 +39,12 @@ public class Supplier implements Serializable {
     /**
      * List of eggs provided by the supplier.
      */
-    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Egg> eggs;
+    @ManyToMany
+    @JoinTable(
+            name = "supplier_type_egg",
+            joinColumns = @JoinColumn(name = "supplier_id"),
+            inverseJoinColumns = @JoinColumn(name = "type_egg_id")
+    )
+    private List<TypeEgg> typeEggs;
+
 }

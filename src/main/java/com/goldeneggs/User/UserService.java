@@ -2,6 +2,7 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
+import com.goldeneggs.Dto.UserDataDto;
 import com.goldeneggs.Role.Role;
 
 import java.util.List;
@@ -28,6 +29,14 @@ public interface UserService {
      * @return The User object if found, or null if not found.
      */
     User getUserById(Long id);
+
+    /**
+     * Retrieves a user's data based on their username.
+     *
+     * @param username the username of the user to retrieve.
+     * @return a UserDataDto containing the user's details if found, or null if no such user exists.
+     */
+    UserDataDto getUserByUsername(String username);
 
     /**
      * Retrieves all users in the system.

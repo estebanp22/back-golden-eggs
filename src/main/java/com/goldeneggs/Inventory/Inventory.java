@@ -36,12 +36,6 @@ public class Inventory implements Serializable {
     private String availableQuantity;
 
     /**
-     * Unit price of the product.
-     */
-    @Column(nullable = false)
-    private double price;
-
-    /**
      * Date the product was added to inventory.
      */
     @Temporal(TemporalType.DATE)

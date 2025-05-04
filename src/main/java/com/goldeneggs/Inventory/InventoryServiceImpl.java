@@ -54,7 +54,6 @@ public class InventoryServiceImpl implements InventoryService {
 
         existing.setNameProduct(updatedInventory.getNameProduct());
         existing.setAvailableQuantity(updatedInventory.getAvailableQuantity());
-        existing.setPrice(updatedInventory.getPrice());
         existing.setEntryDate(updatedInventory.getEntryDate());
 
         return inventoryRepository.save(existing);

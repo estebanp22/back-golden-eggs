@@ -2,6 +2,7 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
+import com.goldeneggs.Dto.UserDataDto;
 import com.goldeneggs.Exception.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,17 @@ public class UserController {
     @GetMapping("/get/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    /**
+     * Retrieves a user's data by their username.
+     *
+     * @param username the username of the user to retrieve.
+     * @return a ResponseEntity containing a UserDataDto with the user's details.
+     */
+    @GetMapping("/getByUsername/{username}")
+    public ResponseEntity<UserDataDto> getUserById(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getUserByUsername(username));
     }
 
     /**

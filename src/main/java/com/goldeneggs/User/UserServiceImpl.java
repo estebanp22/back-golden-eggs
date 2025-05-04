@@ -3,6 +3,7 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
+import com.goldeneggs.Dto.UserDataDto;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Exception.UserAlreadyExistsException;
 import com.goldeneggs.Role.Role;
@@ -72,6 +73,23 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+    }
+
+    @Override
+    public UserDataDto getUserByUsername(String username) {
+        User user =userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with Username: " + username));
+        
+        UserDataDto userDataDto = new UserDataDto();
+        userDataDto.setUsername(user.getUsername());
+        userDataDto.setId(user.getId());
+        userDataDto.setName(user.getName());
+        userDataDto.setPhoneNumber(user.getPhoneNumber());
+        userDataDto.setEmail(user.getEmail());
+        userDataDto.setAddress(user.getAddress());
+        userDataDto.setRoles(user.getRoles());
+
+        return userDataDto;
     }
 
     /**

@@ -2,6 +2,7 @@ package com.goldeneggs.Egg;
 
 import com.goldeneggs.Inventory.Inventory;
 import com.goldeneggs.Supplier.Supplier;
+import com.goldeneggs.TypeEgg.TypeEgg;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,8 +27,9 @@ public class Egg implements Serializable {
     /**
      * Type of egg (e.g., organic, cage-free).
      */
-    @Column(nullable = false)
-    private String type;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "type_id")
+    private TypeEgg type;
 
     /**
      * Shell color of the egg.
@@ -36,17 +38,23 @@ public class Egg implements Serializable {
     private String color;
 
     /**
+     * Purchase price of the egg.
+     */
+    @Column(nullable = false)
+    private Double buyPrice;
+
+    /**
+     * Sale price of the egg.
+     */
+    @Column(nullable = true)
+    private Double salePrice;
+
+    /**
      * Expiration date of the egg.
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "expiration_date", nullable = false)
     private Date expirationDate;
-
-    /**
-     * Category or size (e.g., XL, L, M).
-     */
-    @Column(nullable = false)
-    private String category;
 
     /**
      * Supplier providing the product.

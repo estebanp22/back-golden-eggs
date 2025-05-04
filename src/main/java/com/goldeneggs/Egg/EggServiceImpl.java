@@ -63,7 +63,8 @@ public class EggServiceImpl implements EggService {
         existing.setType(updatedEgg.getType());
         existing.setColor(updatedEgg.getColor());
         existing.setExpirationDate(updatedEgg.getExpirationDate());
-        existing.setCategory(updatedEgg.getCategory());
+        existing.setBuyPrice(updatedEgg.getBuyPrice());
+        existing.setSalePrice(updatedEgg.getSalePrice());
 
         return eggRepository.save(existing);
     }

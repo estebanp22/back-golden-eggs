@@ -42,7 +42,8 @@ public class GoldenEggsApplication implements CommandLineRunner {
 			user.setPhoneNumber("123456789");
 			user.setRoleId(1L);
 
-			//Role role = roleService.get(1L);
+			Role role = roleService.get(1L);
+
 			Role role = new Role();
 			role.setName("Admin");
 			Role roleSaved = roleService.insert(role);
@@ -54,9 +55,7 @@ public class GoldenEggsApplication implements CommandLineRunner {
 			exception.printStackTrace();
 
 		}
-
-
-
  */
+
 	}
 }

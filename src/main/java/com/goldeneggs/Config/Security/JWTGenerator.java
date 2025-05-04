@@ -28,6 +28,7 @@ public class JWTGenerator {
 
         String token = Jwts.builder()
                 .setSubject(username)
+                .claim("role", authentication.getAuthorities().stream().findFirst().orElseThrow().getAuthority( ))
                 .setIssuedAt(currentDate)
                 .setExpiration(expireDate)
                 .signWith(key, SignatureAlgorithm.HS512)
