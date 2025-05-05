@@ -79,4 +79,17 @@ public class EggServiceImpl implements EggService {
     public void delete(Long id) {
         eggRepository.deleteById(id);
     }
+
+    /**
+     * Retrieves the total quantity of eggs across all records.
+     *
+     * @return The total quantity of eggs as a {@code Long}, or {@code null} if no records are present.
+     */
+    @Override
+    public Long getTotalEggQuantity() {
+        System.out.println(eggRepository.getTotalEggQuantity());
+        Long total = eggRepository.getTotalEggQuantity();
+        return total != null ? total : 0;
+    }
+
 }

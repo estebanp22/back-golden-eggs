@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")
 @CrossOrigin("*")
 public class UserController {
 
@@ -125,5 +125,25 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Counts the total number of clients in the system by calling the corresponding service method.
+     *
+     * @return a ResponseEntity containing the total*/
+    @GetMapping("/count/clients")
+    public ResponseEntity<Long> countClients() {
+        return ResponseEntity.ok(userService.countClients());
+    }
+
+    /**
+     * Counts the total number of employees in the system by invoking the corresponding service method.
+     *
+     * @return a ResponseEntity containing the total number of employees as a Long value.
+     */
+    @GetMapping("/count/employees")
+    public ResponseEntity<Long> countEmployees() {
+        return ResponseEntity.ok(userService.countEmployees());
+    }
+
 }
 

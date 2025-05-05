@@ -5,6 +5,9 @@ import org.apache.coyote.BadRequestException;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -85,4 +88,40 @@ public class OrderServiceImpl implements OrderService {
         );
         orderRepository.delete(order);
     }
+
+    /**
+     * Retrieves a list of orders placed within the current month.
+     *
+     * @return A list of {@link Order} instances representing the orders placed
+     *         between the start and end dates of the current month.
+     */
+    @Override
+    public List<Order> getOrdersInCurrentMonth() {
+        LocalDate now = LocalDate.now();
+        Date start = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date end = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        return orderRepository.findOrdersInCurrentMonth(start, end);
+    }
+
+    /**
+     * Counts the number of orders placed within the current month.
+     *
+     * This method calculates the start and end dates of the current month
+     * and queries the order repository to determine the total count of orders
+     * placed during this period.
+     *
+     * @return The total count of orders placed in the current month. Returns 0 if no orders are found.
+     */
+    @Override
+    public Long countOrdersInCurrentMonth() {
+        LocalDate now = LocalDate.now();
+        Date start = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date end = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        Long count = orderRepository.countOrdersInCurrentMonth(start, end);
+        return count != null ? count : 0L;
+    }
+
+
 }
