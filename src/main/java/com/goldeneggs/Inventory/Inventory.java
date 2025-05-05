@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Represents an inventory item in the system.
+ * Represents a stock entry in the inventory system.
  */
 @Entity
 @Table(name = "inventory")
@@ -24,28 +24,30 @@ public class Inventory implements Serializable {
     private Long id;
 
     /**
-     * Name of the product.
+     * Name or reference for this inventory entry (e.g., "Entrada 15/05/2025").
      */
     @Column(name = "name_product", nullable = false)
     private String nameProduct;
 
     /**
-     * Quantity currently available in stock.
-     */
-    @Column(name = "available_quantity", nullable = false)
-    private String availableQuantity;
-
-    /**
-     * Date the product was added to inventory.
+     * Date the products were added to the inventory.
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "entry_date", nullable = false)
     private Date entryDate;
 
     /**
-     * List of eggs associated with this inventory item.
+     * List of eggs associated with this inventory entry.
      */
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Egg> eggs;
 
+    /**
+     * Returns the total quantity of eggs in this inventory entry.
+     */
+    public int getTotalQuantity() {
+        return eggs != null
+                ? eggs.stream().mapToInt(Egg::getQuantity).sum()
+                : 0;
+    }
 }
