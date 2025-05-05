@@ -10,7 +10,7 @@ import java.util.List;
 @RestController
 @CrossOrigin("*")
 @RequestMapping("/api/v1/role")
-public class RolController {
+public class RoleController {
 
     @Autowired
     private RoleService roleService;

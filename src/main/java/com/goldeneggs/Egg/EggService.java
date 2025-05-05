@@ -45,4 +45,11 @@ public interface EggService {
      * @param id The ID of the egg to delete.
      */
     void delete(Long id);
+
+    /**
+     * Calculates the total quantity of eggs across all records in the system.
+     *
+     * @return The total number of eggs as a {@code Long}, or {@code null} if no records are present.
+     */
+    public Long getTotalEggQuantity();
 }

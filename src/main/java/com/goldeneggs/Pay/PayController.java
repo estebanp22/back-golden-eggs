@@ -11,7 +11,7 @@ import java.util.List;
  * REST controller for managing payments.
  */
 @RestController
-@RequestMapping("/api/v1/pay")
+@RequestMapping("/api/v1/payments")
 @CrossOrigin("*")
 public class PayController {
 
@@ -86,5 +86,27 @@ public class PayController {
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Returns the total income from all payments in the system.
+     *
+     * @return Total income as {@code Double}, or 0.0 if no payments exist.
+     */
+    @GetMapping("/totalIncome")
+    public ResponseEntity<Double> getTotalIncome() {
+        Double total = payService.totalIncome();
+        return ResponseEntity.ok(total);
+    }
+
+    /**
+     * Returns the total income from payments made during the current month.
+     *
+     * @return Total income for the current month as {@code Double}, or 0.0 if no payments exist.
+     */
+    @GetMapping("/totalIncomeCurrentMonth")
+    public ResponseEntity<Double> getTotalIncomeThisMonth() {
+        Double total = payService.totalIncomeCurrentMonth();
+        return ResponseEntity.ok(total);
     }
 }

@@ -3,7 +3,6 @@ package com.goldeneggs.Config.Security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -44,6 +43,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/v1/visits").permitAll()
+                                .requestMatchers("/api/v1/visits/count").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/api/v1/bills/**").hasAuthority("ADMIN")
+
+                                .requestMatchers("/api/v1/eggs/getAll").permitAll()
+                                .requestMatchers("/api/v1/eggs/**").hasAuthority("ADMIN")
+
+                                .requestMatchers("/api/v1/inventories/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/orders/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/payments/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/reports/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/roles/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/suppliers/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/egg-types/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
@@ -81,60 +95,5 @@ public class SecurityConfig {
     public JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter();
     }
-
-    /*
-
-    EJEMPLO DEL MANEJO DE AUTORIZACION DE ROLES A ENDPOINTS
-
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .cors() // Habilita CORS
-                .and()
-                .csrf().disable() // Deshabilitar CSRF
-                .authorizeRequests()
-                .antMatchers("/api/v1/user/updatePassword/**").permitAll()
-                .antMatchers("/generate-token").permitAll()
-                .antMatchers("/api/v1/user/save/**").hasAnyAuthority("Desarrollador")
-                .antMatchers("/api/v1/user/get/**").hasAnyAuthority("Desarrollador", "Administrador", "Director Técnico", "Gestor de Calidad","SST", "Inspector de Línea", "Gestor Documental")
-                .antMatchers("/api/v1/user/updatePasswordModule/**").hasAnyAuthority("Desarrollador", "Administrador", "Director Técnico", "Gestor de Calidad","SST", "Inspector de Línea", "Gestor Documental")
-                .antMatchers("/api/v1/user/getAll/**").hasAnyAuthority("Desarrollador")
-                .antMatchers("/api/v1/user/active/**").hasAnyAuthority("Desarrollador")
-                .antMatchers("/api/v1/user/disable/**").hasAnyAuthority("Desarrollador")
-                .antMatchers("/api/v1/user/update/**").hasAnyAuthority("Desarrollador")
-
-                .antMatchers("/api/v1/referidos/**").hasAnyAuthority("Desarrollador", "Administrador")
-                .antMatchers("/api/v1/referidos-pagos/**").hasAnyAuthority("Desarrollador", "Administrador")
-
-
-                .antMatchers("/api/v1/control-registros/**").hasAnyAuthority("Desarrollador", "Administrador", "SST")
-                .antMatchers("/api/v1/anotaciones/**").hasAnyAuthority("Desarrollador", "Administrador", "SST")
-                .antMatchers("/api/v1/permiso/**").hasAnyAuthority("Desarrollador", "Administrador", "SST")
-                .antMatchers("/api/v1/articulos/**").hasAnyAuthority("Desarrollador", "Administrador")
-                .antMatchers("/api/v1/inventario/**").hasAnyAuthority("Desarrollador", "Administrador")
-                .antMatchers("/api/v1/articulos-funcionarios/**").hasAnyAuthority("Desarrollador", "Administrador")
-                .antMatchers("/api/v1/supervision/**").hasAnyAuthority("Desarrollador", "Administrador", "Director Técnico", "Gestor de Calidad")
-                .antMatchers("/api/v1/progreso-supervision/**").hasAnyAuthority("Desarrollador", "Administrador", "Director Técnico", "Gestor de Calidad")
-
-
-                .antMatchers("/api/v1/rol/**").hasAnyAuthority("Desarrollador")
-                .antMatchers("/api/v1/vacaciones/**").hasAnyAuthority("Desarrollador", "Administrador","SST")
-                .antMatchers("/api/v1/historial/**").hasAnyAuthority("Desarrollador", "Administrador")
-                .antMatchers("/api/v1/bitacoras/**").hasAnyAuthority("Desarrollador", "Administrador","Director Técnico", "Gestor de Calidad", "Inspector de Línea")
-                .antMatchers("/api/v1/bitacora-revisada/**").hasAnyAuthority("Desarrollador", "Administrador","Director Técnico", "Gestor de Calidad")
-                .antMatchers("/api/v1/equipo-bitacora/**").hasAnyAuthority("Desarrollador", "Administrador","Director Técnico", "Gestor de Calidad", "Inspector de Línea")
-                .antMatchers("/api/v1/encuesta/**").hasAnyAuthority("Desarrollador", "Administrador")
-
-                .antMatchers(HttpMethod.OPTIONS).permitAll() // Permitir opciones sin autenticación
-                .anyRequest().authenticated()
-                .and()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler)
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Sin estado (JWT)
-
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    }
-
-     */
-
 
 }

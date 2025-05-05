@@ -53,7 +53,6 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory existing = get(id); // Will throw exception if not found
 
         existing.setNameProduct(updatedInventory.getNameProduct());
-        existing.setAvailableQuantity(updatedInventory.getAvailableQuantity());
         existing.setEntryDate(updatedInventory.getEntryDate());
 
         return inventoryRepository.save(existing);

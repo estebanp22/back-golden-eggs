@@ -10,7 +10,7 @@ import java.util.List;
  * REST controller for managing eggs.
  */
 @RestController
-@RequestMapping("/api/v1/egg")
+@RequestMapping("/api/v1/eggs")
 @CrossOrigin("*")
 public class EggController {
 
@@ -72,4 +72,16 @@ public class EggController {
         eggService.delete(id);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Retrieves the total quantity of eggs across all records in the system.
+     *
+     * @return A {@code ResponseEntity} containing the total number of eggs as a {@code Long}.
+     */
+    @GetMapping("/totalQuantity")
+    public ResponseEntity<Long> getTotalEggQuantity() {
+        Long total = eggService.getTotalEggQuantity();
+        return ResponseEntity.ok(total);
+    }
+
 }

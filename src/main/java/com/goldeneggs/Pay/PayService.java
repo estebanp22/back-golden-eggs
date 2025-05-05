@@ -72,4 +72,19 @@ public interface PayService {
      * @throws ResourceNotFoundException If the payment with the given ID does not exist.
      */
     void delete(Long id);
+
+    /**
+     * Calculates the total income from all payments.
+     *
+     * @return The total sum of all payments as a {@code Double}.
+     */
+    Double totalIncome();
+
+    /**
+     * Calculates the total income from all payments made in the last calendar month.
+     *
+     * @return The total sum of all payments from the previous calendar month as a {@code Double}.
+     */
+    Double totalIncomeCurrentMonth();
+
 }

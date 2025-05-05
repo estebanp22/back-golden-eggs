@@ -12,7 +12,7 @@ import java.util.List;
  * REST controller for managing inventory items.
  */
 @RestController
-@RequestMapping("/api/v1/inventory")
+@RequestMapping("/api/v1/inventories")
 @CrossOrigin("*")
 public class InventoryController {
 
@@ -24,7 +24,6 @@ public class InventoryController {
      *
      * @param inventory Inventory data to be saved.
      * @return ResponseEntity containing the saved inventory item.
-     * @throws BadRequestException If the provided inventory data is invalid.
      */
     @PostMapping("/save")
     public ResponseEntity<Inventory> save(@RequestBody Inventory inventory) {

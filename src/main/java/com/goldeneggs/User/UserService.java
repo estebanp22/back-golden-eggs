@@ -85,4 +85,18 @@ public interface UserService {
      * @return The updated User object after being activated.
      */
     User activateUser(Long id);
+
+    /**
+     * Counts the total number of clients in the system.
+     *
+     * @return the total number of clients as a Long value.
+     */
+    Long countClients();
+
+    /**
+     * Counts the total number of employees in the system.
+     *
+     * @return the total number of employees as a Long value.
+     */
+    Long countEmployees();
 }

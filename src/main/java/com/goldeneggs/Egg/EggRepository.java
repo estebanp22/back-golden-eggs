@@ -1,6 +1,7 @@
 package com.goldeneggs.Egg;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -8,4 +9,13 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface EggRepository extends JpaRepository<Egg, Long> {
+
+    /**
+     * Calculates the total quantity of eggs across all records.
+     *
+     * @return The total quantity of eggs as a {@code Long}, or {@code null} if no records are present.
+     */
+    @Query("SELECT SUM(e.quantity) FROM Egg e")
+    Long getTotalEggQuantity();
+
 }

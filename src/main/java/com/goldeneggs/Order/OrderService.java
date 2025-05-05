@@ -44,4 +44,18 @@ public interface OrderService {
      * @throws ResourceNotFoundException If the order with the given ID does not exist.
      */
     void deleteOrder(Long id);
+
+    /**
+     * Retrieves a list of orders placed in the current month.
+     *
+     * @return A list of orders that were created within the current month.
+     */
+    List<Order> getOrdersInCurrentMonth();
+
+    /**
+     * Counts the total number of orders placed within the current month.
+     *
+     * @return The total count of orders created in the current month.
+     */
+    Long countOrdersInCurrentMonth();
 }

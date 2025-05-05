@@ -227,4 +227,25 @@ public class UserServiceImpl implements UserService {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
     }
+
+    /**
+     * Counts the number of users with the role "Customer".
+     *
+     * @return The total count of clients as a Long value.
+     */
+    @Override
+    public Long countClients() {
+        return userRepository.countUsersByRoleName("Customer");
+    }
+
+    /**
+     * Counts the number of users with the role "Employee".
+     *
+     * @return The total count of employees as a Long value.
+     */
+    @Override
+    public Long countEmployees() {
+        return userRepository.countUsersByRoleName("Employee");
+    }
+
 }
