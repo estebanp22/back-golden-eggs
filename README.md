@@ -80,8 +80,10 @@ You can test all endpoints using Postman or any API testing tool.
 
 This project works together with the frontend repo built in Angular:
 
-- **Frontend repo**: [front-golden-eggs](https://github.com/estebanp22/front-golden-eggs)
+- 🎨**Frontend repo** (Angular): [front-golden-eggs](https://github.com/estebanp22/front-golden-eggs)
 
 ---
 
-Developed with ❤️.
+### 📃 License
+
+This project is licensed under the MIT License.
