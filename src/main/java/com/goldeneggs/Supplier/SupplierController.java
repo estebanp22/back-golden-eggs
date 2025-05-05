@@ -11,7 +11,7 @@ import java.util.List;
  * REST controller for managing suppliers.
  */
 @RestController
-@RequestMapping("/api/v1/supplier")
+@RequestMapping("/api/v1/suppliers")
 @CrossOrigin("*")
 public class SupplierController {
 

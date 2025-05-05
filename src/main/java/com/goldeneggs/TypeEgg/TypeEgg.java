@@ -1,5 +1,6 @@
 package com.goldeneggs.TypeEgg;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.goldeneggs.Supplier.Supplier;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,7 @@ public class TypeEgg {
     private String type;
 
     @ManyToMany(mappedBy = "typeEggs")
+    @JsonBackReference
     private List<Supplier> suppliers;
 
 }

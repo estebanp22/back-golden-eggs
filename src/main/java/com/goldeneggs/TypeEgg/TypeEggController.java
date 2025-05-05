@@ -11,7 +11,7 @@ import java.util.List;
  * REST controller for managing egg types.
  */
 @RestController
-@RequestMapping("/api/v1/type-egg")
+@RequestMapping("/api/v1/egg-types")
 @CrossOrigin("*")
 public class TypeEggController {
 

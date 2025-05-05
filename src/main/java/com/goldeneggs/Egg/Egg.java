@@ -1,5 +1,6 @@
 package com.goldeneggs.Egg;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.goldeneggs.Inventory.Inventory;
 import com.goldeneggs.Supplier.Supplier;
 import com.goldeneggs.TypeEgg.TypeEgg;
@@ -68,6 +69,7 @@ public class Egg implements Serializable {
      */
     @ManyToOne
     @JoinColumn(name = "inventory_id")
+    @JsonIgnoreProperties("eggs")
     private Inventory inventory;
 
     /**

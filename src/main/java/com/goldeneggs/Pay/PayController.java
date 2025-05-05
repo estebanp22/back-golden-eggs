@@ -11,7 +11,7 @@ import java.util.List;
  * REST controller for managing payments.
  */
 @RestController
-@RequestMapping("/api/v1/pay")
+@RequestMapping("/api/v1/payments")
 @CrossOrigin("*")
 public class PayController {
 

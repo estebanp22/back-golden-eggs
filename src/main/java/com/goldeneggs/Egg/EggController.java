@@ -10,7 +10,7 @@ import java.util.List;
  * REST controller for managing eggs.
  */
 @RestController
-@RequestMapping("/api/v1/egg")
+@RequestMapping("/api/v1/eggs")
 @CrossOrigin("*")
 public class EggController {
 

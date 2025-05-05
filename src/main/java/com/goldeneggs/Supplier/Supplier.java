@@ -1,7 +1,6 @@
 package com.goldeneggs.Supplier;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.goldeneggs.Egg.Egg;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.goldeneggs.TypeEgg.TypeEgg;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,6 +44,7 @@ public class Supplier implements Serializable {
             joinColumns = @JoinColumn(name = "supplier_id"),
             inverseJoinColumns = @JoinColumn(name = "type_egg_id")
     )
+    @JsonManagedReference
     private List<TypeEgg> typeEggs;
 
 }
