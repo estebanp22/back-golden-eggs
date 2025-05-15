@@ -1,5 +1,7 @@
 package com.goldeneggs.Bill;
 
+import com.goldeneggs.Dto.BillDto;
+
 import java.util.List;
 
 /**
@@ -16,7 +18,39 @@ public interface BillService {
      *
      * @return a list of all bills.
      */
-    List<Bill> getAll();
+    List<BillDto> getAll();
+
+
+    /**
+     *returns all invoices sent to the company
+     *
+     * @return a list of all the company's invoices.
+     */
+    List<BillDto> getAllBillsForCompany();
+
+    /**
+     * returns all invoices sent to a client
+     *
+     * @return a list of all customer invoices.
+     */
+    List<BillDto> getAllBillsForCustomers();
+
+    /**
+     * Calculates the total sales amount for the current month.
+     * Only bills associated with users who have the "CUSTOMER" role are considered.
+     *
+     * @return the total monthly sales as a {@link Double}.
+     */
+    Double getMonthlySalesTotal();
+
+    /**
+     * Determines the customer who spent the most during the current month.
+     * The evaluation is based only on users with the "CUSTOMER" role.
+     *
+     * @return the name of the top-spending customer for the current month,
+     *         or "Sin compras este mes" if no qualifying purchases exist.
+     */
+    String getBestCustomerOfMonth();
 
     /**
      * Retrieves a bill by its unique ID.
@@ -52,4 +86,11 @@ public interface BillService {
      * @throws com.goldeneggs.Exception.ResourceNotFoundException if no bill is found with the given ID.
      */
     void delete(Long id);
+
+    /**
+     * Retrieves the number of bills issued in the current month.
+     *
+     * @return The total number of bills issued in the current month. Returns 0 if no bills are found.
+     */
+    Long countCustomerBillsInCurrentMonth();
 }
