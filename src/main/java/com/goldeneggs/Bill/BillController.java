@@ -1,5 +1,6 @@
 package com.goldeneggs.Bill;
 
+import com.goldeneggs.Dto.BillDto;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,7 @@ import java.util.List;
  * REST controller for managing {@link Bill} resources.
  */
 @RestController
-@RequestMapping("/api/v1/bill")
+@RequestMapping("/api/v1/bills")
 @CrossOrigin("*")
 public class BillController {
 
@@ -47,8 +48,59 @@ public class BillController {
      * @return A list of all {@link Bill} entities.
      */
     @GetMapping("/getAll")
-    public ResponseEntity<List<Bill>> getAll() {
+    public ResponseEntity<List<BillDto>> getAll() {
         return ResponseEntity.ok(billService.getAll());
+    }
+
+    /**
+     * Retrieves all bills associated with company users
+     * (users with roles "EMPLOYEE" or "ADMIN").
+     *
+     * @return A {@link ResponseEntity} containing a list of {@link BillDto} objects
+     *         representing company bills.
+     */
+    @GetMapping("/getAllOfCompany")
+    public ResponseEntity<List<BillDto>> getAllCompanyBills() {
+        return ResponseEntity.ok(billService.getAllBillsForCompany());
+    }
+
+    /**
+     * Retrieves all bills associated with customers
+     * (users with the "CUSTOMER" role).
+     *
+     * @return A {@link ResponseEntity} containing a list of {@link BillDto} objects
+     *         representing customer bills.
+     */
+    @GetMapping("/getAllOfCustomers")
+    public ResponseEntity<List<BillDto>> getAllCustomerBills() {
+        return ResponseEntity.ok(billService.getAllBillsForCustomers());
+    }
+
+    /**
+     * Retrieves the total amount of sales for the current month.
+     * Only bills from customers are considered in the calculation.
+     *
+     * @return a {@link ResponseEntity} containing the total monthly sales asgetBestCustomer() {
+    console.log(this.http.get<string>(`${this.apiUrl}/bills/bestCustomer`));
+    getBestCustomer() {
+      return this.http.get<any>(`${this.apiUrl}/bills/bestCustomer`);
+    }
+  } a {@link Double}.
+     */
+    @GetMapping("/monthlySalesTotal")
+    public ResponseEntity<Double> getMonthlySalesTotal() {
+        return ResponseEntity.ok(billService.getMonthlySalesTotal());
+    }
+
+    /**
+     * Retrieves the name of the best customer of the current month,
+     * based on the highest total purchase amount.
+     *
+     * @return a {@link ResponseEntity} containing the name of the top-spending customer.
+     */
+    @GetMapping("/bestCustomer")
+    public ResponseEntity<String> getBestCustomerOfMonth() {
+        return ResponseEntity.ok(billService.getBestCustomerOfMonth());
     }
 
     /**
@@ -75,5 +127,16 @@ public class BillController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         billService.delete(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Retrieves the total number of bills issued to customers in the current month.
+     *
+     * @return ResponseEntity containing the count of customer bills for the current month.
+     */
+    @GetMapping("/countThisMonth")
+    public ResponseEntity<Long> countBillsInCurrentMonth() {
+        Long count = billService.countCustomerBillsInCurrentMonth();
+        return ResponseEntity.ok(count);
     }
 }
