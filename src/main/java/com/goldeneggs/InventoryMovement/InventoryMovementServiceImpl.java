@@ -1,4 +1,4 @@
-package com.goldeneggs.Inventory;
+package com.goldeneggs.InventoryMovement;
 
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,17 +11,17 @@ import java.util.List;
  * Handles business logic for inventory-related operations.
  */
 @Service
-public class InventoryServiceImpl implements InventoryService {
+public class InventoryMovementServiceImpl implements InventoryMovementService {
 
     @Autowired
-    private InventoryRepository inventoryRepository;
+    private InventoryMovementRepository inventoryMovementRepository;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Inventory> getAll() {
-        return inventoryRepository.findAll();
+    public List<InventoryMovement> getAll() {
+        return inventoryMovementRepository.findAll();
     }
 
     /**
@@ -30,8 +30,8 @@ public class InventoryServiceImpl implements InventoryService {
      * @throws ResourceNotFoundException if the inventory item is not found.
      */
     @Override
-    public Inventory get(Long id) {
-        return inventoryRepository.findById(id)
+    public InventoryMovement get(Long id) {
+        return inventoryMovementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory with ID " + id + " not found."));
     }
 
@@ -39,8 +39,8 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    public Inventory save(Inventory inventory) {
-        return inventoryRepository.save(inventory);
+    public InventoryMovement save(InventoryMovement inventoryMovement) {
+        return inventoryMovementRepository.save(inventoryMovement);
     }
 
     /**
@@ -49,13 +49,10 @@ public class InventoryServiceImpl implements InventoryService {
      * @throws ResourceNotFoundException if the inventory item to update is not found.
      */
     @Override
-    public Inventory update(Long id, Inventory updatedInventory) {
-        Inventory existing = get(id); // Will throw exception if not found
+    public InventoryMovement update(Long id, InventoryMovement updatedInventoryMovement) {
+        InventoryMovement existing = get(id); // Will throw exception if not foun
 
-        existing.setNameProduct(updatedInventory.getNameProduct());
-        existing.setEntryDate(updatedInventory.getEntryDate());
-
-        return inventoryRepository.save(existing);
+        return inventoryMovementRepository.save(existing);
     }
 
     /**
@@ -65,7 +62,7 @@ public class InventoryServiceImpl implements InventoryService {
      */
     @Override
     public void delete(Long id) {
-        Inventory inventory = get(id); // Will throw exception if not found
-        inventoryRepository.deleteById(id);
+        InventoryMovement inventoryMovement = get(id); // Will throw exception if not found
+        inventoryMovementRepository.deleteById(id);
     }
 }

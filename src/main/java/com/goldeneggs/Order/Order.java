@@ -1,6 +1,7 @@
 package com.goldeneggs.Order;
 
 import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.OrderEgg.OrderEgg;
 import com.goldeneggs.User.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,13 +36,8 @@ public class Order {
     /**
      * List of eggs included in the order.
      */
-    @ManyToMany
-    @JoinTable(
-            name = "order_eggs",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "egg_id")
-    )
-    private List<Egg> eggs;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderEgg> orderEggs;
 
     /**
      * Total price of the order.

@@ -1,7 +1,7 @@
 package com.goldeneggs.Egg;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.goldeneggs.Inventory.Inventory;
+import com.goldeneggs.InventoryMovement.InventoryMovement;
 import com.goldeneggs.Supplier.Supplier;
 import com.goldeneggs.TypeEgg.TypeEgg;
 import jakarta.persistence.*;
@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Represents a batch of eggs of the same type and properties.
@@ -67,14 +68,12 @@ public class Egg implements Serializable {
     /**
      * Inventory entry this egg batch belongs to.
      */
-    @ManyToOne
-    @JoinColumn(name = "inventory_id")
-    @JsonIgnoreProperties("eggs")
-    private Inventory inventory;
+    @OneToMany(mappedBy = "egg", cascade = CascadeType.ALL)
+    private List<InventoryMovement> movements;
 
     /**
      * Quantity of eggs in this batch.
      */
     @Column(nullable = false)
-    private Integer quantity;
+    private int avibleQuantity; //Unidades de huevo
 }
