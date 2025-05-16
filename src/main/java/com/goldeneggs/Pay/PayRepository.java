@@ -1,5 +1,6 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Bill.Bill;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,14 @@ import java.util.Date;
  */
 @Repository
 public interface PayRepository extends JpaRepository<Pay, Long> {
+
+    /**
+     * Deletes all payment records associated with a specific bill.
+     *
+     * @param bill The bill associated with the payments to be deleted.
+     */
+    void deleteAllByBill(Bill bill);
+
     /**
      * Calculates the total sum of all payments made.
      *

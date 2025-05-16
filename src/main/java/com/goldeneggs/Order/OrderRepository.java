@@ -1,5 +1,6 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.User.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,14 @@ import java.util.List;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+
+    /**
+     * Deletes all orders associated with the specified user from the repository.
+     *
+     * @param user The user whose associated orders are to be deleted.
+     */
+    void deleteAllByUser(User user);
 
     /**
      * Retrieves a list of orders placed within the current month.

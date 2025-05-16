@@ -1,5 +1,6 @@
 package com.goldeneggs.Bill;
 
+import com.goldeneggs.Order.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,14 @@ import java.util.List;
  */
 @Repository
 public interface BillRepository extends JpaRepository<Bill, Long> {
+
+    /**
+     * Deletes a bill associated with the specified order.
+     *
+     * @param order the order whose associated bill is to be deleted.
+     */
+    void deleteByOrder(Order order);
+
 
     /**
      * Counts the number of bills for customers issued within a specific date range.
