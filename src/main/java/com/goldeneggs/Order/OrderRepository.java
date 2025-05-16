@@ -1,5 +1,6 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.User.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,14 @@ import java.util.List;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+
+    /**
+     * Deletes all orders associated with the specified user from the repository.
+     *
+     * @param user The user whose associated orders are to be deleted.
+     */
+    void deleteAllByUser(User user);
 
     /**
      * Retrieves a list of orders placed within the current month.
@@ -33,6 +42,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      */
     @Query("SELECT COUNT(o) FROM Order o WHERE o.orderDate BETWEEN :start AND :end")
     Long countOrdersInCurrentMonth(@Param("start") Date start, @Param("end") Date end);
+
+    /**
+     * Counts the total number of orders placed by a specific customer.
+     *
+     * @param customerId The ID of the customer whose orders are to be counted.
+     * @return The total number of orders placed by the specified customer.
+     */
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :customerId")
+    Long countOrdersByCustomerId(@Param("customerId") Long customerId);
 
 
 }

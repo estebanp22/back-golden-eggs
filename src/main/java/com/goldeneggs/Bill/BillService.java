@@ -80,6 +80,15 @@ public interface BillService {
     Bill update(Long id, Bill updatedBill);
 
     /**
+     * Retrieves all bills associated with a specific customer.
+     *
+     * @param customerId the unique identifier of the customer whose bills are to be retrieved.
+     * @return a list of {@link BillDto} objects representing the bills of the specified customer.
+     */
+    List<BillDto> getBillsByCustomer(Long customerId);
+
+
+    /**
      * Deletes a bill by its ID.
      *
      * @param id the ID of the bill to delete.

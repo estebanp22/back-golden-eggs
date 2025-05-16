@@ -1,13 +1,18 @@
 package com.goldeneggs.User;
 
 
+import com.goldeneggs.Bill.BillRepository;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
 import com.goldeneggs.Dto.UserDataDto;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Exception.UserAlreadyExistsException;
+import com.goldeneggs.Order.Order;
+import com.goldeneggs.Order.OrderRepository;
+import com.goldeneggs.Pay.PayRepository;
 import com.goldeneggs.Role.Role;
 import com.goldeneggs.Role.RoleRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +31,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private BillRepository billRepository;
+
+    @Autowired
+    private PayRepository payRepository;
 
     /**
      * Registers a new user if the username and ID do not already exist.
@@ -92,18 +106,50 @@ public class UserServiceImpl implements UserService {
         return userDataDto;
     }
 
+
     /**
-     * Deletes a user by ID.
+     * Deletes a user from the system along with all associated orders, bills,
+     * and payment records.
      *
-     * @param userId The ID of the user to delete.
-     * @throws ResourceNotFoundException if no user with the given ID is found.
+     * This method performs the following operations:
+     * - Retrieves the user by their ID. If the user does not exist, a
+     *   ResourceNotFoundException is thrown.
+     * - Searches for all orders associated with the user.
+     * - Iterates through each order and finds associated bills. For each bill,
+     *   all payments linked to the bill are deleted, followed by the deletion of the bill itself.
+     * - Deletes all orders associated with the user.
+     * - Deletes the user.
+     *
+     * This method is transactional to ensure atomicity and consistency of the deletion
+     * process.
+     *
+     * @param userId the unique identifier of the user to be deleted
+     * @throws ResourceNotFoundException if no user is found with the provided ID
      */
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
-        userRepository.deleteById(userId);
+        List<Order> orders = orderRepository.findAll().stream()
+                .filter(order -> order.getUser().getId().equals(userId))
+                .toList();
+
+        for (Order order : orders) {
+            billRepository.findAll().stream()
+                    .filter(bill -> bill.getOrder().getId().equals(order.getId()))
+                    .findFirst()
+                    .ifPresent(bill -> {
+                        payRepository.deleteAllByBill(bill);
+                        billRepository.delete(bill);
+                    });
+
+            orderRepository.delete(order);
+        }
+        userRepository.delete(user);
     }
+
+
 
     /**
      * Updates an existing user's information. Only non-null and non-blank fields will be updated.

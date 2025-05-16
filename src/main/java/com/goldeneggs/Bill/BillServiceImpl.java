@@ -44,6 +44,34 @@ public class BillServiceImpl implements BillService {
             );
         }).collect(Collectors.toList());
     }
+    /**
+     * Retrieves a list of bills for a specific customer.
+     *
+     * @param customerId the unique identifier of the customer whose bills need to be retrieved
+     * @return a list of BillDto objects representing the bills of the specified customer
+     */
+    @Override
+    public List<BillDto> getBillsByCustomer(Long customerId) {
+        return billRepository.findAll().stream()
+                .filter(bill -> {
+                    Order order = bill.getOrder();
+                    return order.getUser().getId().equals(customerId);
+                })
+                .map(bill -> {
+                    Order order = bill.getOrder();
+                    return new BillDto(
+                            bill.getId(),
+                            bill.getIssueDate().toString(),
+                            bill.isPaid(),
+                            bill.getTotalPrice(),
+                            order.getUser().getName(),
+                            order.getOrderDate().toString(),
+                            order.getState()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * Retrieves all bills that are associated with company users,
