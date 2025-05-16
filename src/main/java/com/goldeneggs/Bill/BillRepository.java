@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Repository for managing Bill entities.
@@ -23,5 +24,15 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     @Query("SELECT COUNT(b) FROM Bill b WHERE b.issueDate BETWEEN :start AND :end " +
             "AND EXISTS (SELECT r FROM b.order.user.roles r WHERE r.name = 'CUSTOMER')")
     Long countCustomerBillsInCurrentMonth(@Param("start") Date start, @Param("end") Date end);
+
+    /**
+     * Retrieves all bills associated with a specific customer.
+     *
+     * @param customerId the ID of the customer whose bills should be retrieved.
+     * @return a list of {@link Bill} entities associated with the specified customer ID.
+     */
+    @Query("SELECT b FROM Bill b WHERE b.order.user.id = :customerId")
+    List<Bill> findAllByCustomerId(@Param("customerId") Long customerId);
+
 
 }

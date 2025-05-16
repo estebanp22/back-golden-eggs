@@ -53,6 +53,20 @@ public class BillController {
     }
 
     /**
+     * Retrieves all bills associated with a specific customer.
+     *
+     * @param id The ID of the customer whose bills are to be retrieved.
+     * @return A {@link ResponseEntity} containing a list of {@link BillDto} objects
+     *         representing the customer's bills.
+     */
+    @GetMapping("/byCustomer/{id}")
+    public ResponseEntity<List<BillDto>> getBillsByCustomer(@PathVariable Long id) {
+        List<BillDto> customerBills = billService.getBillsByCustomer(id);
+        return ResponseEntity.ok(customerBills);
+    }
+
+
+    /**
      * Retrieves all bills associated with company users
      * (users with roles "EMPLOYEE" or "ADMIN").
      *
