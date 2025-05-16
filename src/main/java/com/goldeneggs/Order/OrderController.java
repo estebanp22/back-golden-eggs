@@ -45,6 +45,19 @@ public class OrderController {
     }
 
     /**
+     * Counts the total number of orders for a specific customer.
+     *
+     * @param customerId The ID of the customer whose orders should be counted.
+     * @return A ResponseEntity containing the total number of orders for the specified customer.
+     * @throws ResourceNotFoundException If the customer with the given ID does not exist.
+     */
+    @GetMapping("/countByCustomer/{customerId}")
+    public ResponseEntity<Long> countOrdersByCustomer(@PathVariable Long customerId) {
+        Long count = orderService.countOrdersByCustomerId(customerId);
+        return ResponseEntity.ok(count);
+    }
+
+    /**
      * Retrieves an order by its ID.
      *
      * @param id The ID of the order to retrieve.

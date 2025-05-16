@@ -58,4 +58,13 @@ public interface OrderService {
      * @return The total count of orders created in the current month.
      */
     Long countOrdersInCurrentMonth();
+
+    /**
+     * Counts the total number of orders placed by a specific customer.
+     *
+     * @param customerId The ID of the customer whose orders are to be counted.
+     * @return The total number of orders placed by the specified customer.
+     */
+    Long countOrdersByCustomerId(Long customerId);
+
 }

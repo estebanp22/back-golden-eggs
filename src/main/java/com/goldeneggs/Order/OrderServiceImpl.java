@@ -61,6 +61,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * Counts the total number of orders placed by a specific customer.
+     *
+     * @param customerId The ID of the customer whose orders are to be counted.
+     * @return The total number of orders placed by the specified customer.
+     */
+    @Override
+    public Long countOrdersByCustomerId(Long customerId) {
+        return orderRepository.countOrdersByCustomerId(customerId);
+    }
+
+
+    /**
      * Saves a new or existing order.
      *
      * @param order The order to save.
