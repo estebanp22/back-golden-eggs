@@ -1,7 +1,6 @@
-package com.goldeneggs.Inventory;
+package com.goldeneggs.InventoryMovement;
 
 import com.goldeneggs.Exception.ResourceNotFoundException;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,20 +13,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/inventories")
 @CrossOrigin("*")
-public class InventoryController {
+public class InventoryMovementController {
 
     @Autowired
-    private InventoryService inventoryService;
+    private InventoryMovementService inventoryMovementService;
 
     /**
      * Saves a new inventory item.
      *
-     * @param inventory Inventory data to be saved.
+     * @param inventoryMovement Inventory data to be saved.
      * @return ResponseEntity containing the saved inventory item.
      */
     @PostMapping("/save")
-    public ResponseEntity<Inventory> save(@RequestBody Inventory inventory) {
-        return ResponseEntity.ok(inventoryService.save(inventory));
+    public ResponseEntity<InventoryMovement> save(@RequestBody InventoryMovement inventoryMovement) {
+        return ResponseEntity.ok(inventoryMovementService.save(inventoryMovement));
     }
 
     /**
@@ -38,8 +37,8 @@ public class InventoryController {
      * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @GetMapping("/get/{id}")
-    public ResponseEntity<Inventory> get(@PathVariable Long id) {
-        Inventory inv = inventoryService.get(id);
+    public ResponseEntity<InventoryMovement> get(@PathVariable Long id) {
+        InventoryMovement inv = inventoryMovementService.get(id);
         if (inv == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(inv);
     }
@@ -50,21 +49,21 @@ public class InventoryController {
      * @return ResponseEntity containing a list of all inventory items.
      */
     @GetMapping("/getAll")
-    public ResponseEntity<List<Inventory>> getAll() {
-        return ResponseEntity.ok(inventoryService.getAll());
+    public ResponseEntity<List<InventoryMovement>> getAll() {
+        return ResponseEntity.ok(inventoryMovementService.getAll());
     }
 
     /**
      * Updates an existing inventory item.
      *
      * @param id The ID of the inventory item to update.
-     * @param inventory The updated inventory data.
+     * @param inventoryMovement The updated inventory data.
      * @return ResponseEntity containing the updated inventory item, or 404 Not Found if the item does not exist.
      * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Inventory> update(@PathVariable Long id, @RequestBody Inventory inventory) {
-        Inventory updated = inventoryService.update(id, inventory);
+    public ResponseEntity<InventoryMovement> update(@PathVariable Long id, @RequestBody InventoryMovement inventoryMovement) {
+        InventoryMovement updated = inventoryMovementService.update(id, inventoryMovement);
         if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
@@ -78,7 +77,7 @@ public class InventoryController {
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        inventoryService.delete(id);
+        inventoryMovementService.delete(id);
         return ResponseEntity.ok().build();
     }
 }

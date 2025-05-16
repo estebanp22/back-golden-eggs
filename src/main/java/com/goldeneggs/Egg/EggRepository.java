@@ -15,7 +15,7 @@ public interface EggRepository extends JpaRepository<Egg, Long> {
      *
      * @return The total quantity of eggs as a {@code Long}, or {@code null} if no records are present.
      */
-    @Query("SELECT SUM(e.quantity) FROM Egg e")
+    @Query("SELECT SUM(e.avibleQuantity) FROM Egg e")
     Long getTotalEggQuantity();
 
 }
