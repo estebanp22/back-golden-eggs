@@ -1,6 +1,6 @@
 package com.goldeneggs.Egg;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.*;
 import com.goldeneggs.InventoryMovement.InventoryMovement;
 import com.goldeneggs.Supplier.Supplier;
 import com.goldeneggs.TypeEgg.TypeEgg;
@@ -20,6 +20,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class Egg implements Serializable {
 
     @Id
@@ -31,6 +34,7 @@ public class Egg implements Serializable {
      */
     @ManyToOne(optional = false)
     @JoinColumn(name = "type_id")
+    @JsonIdentityReference(alwaysAsId = true)
     private TypeEgg type;
 
     /**
@@ -56,6 +60,7 @@ public class Egg implements Serializable {
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "expiration_date", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date expirationDate;
 
     /**
@@ -63,12 +68,14 @@ public class Egg implements Serializable {
      */
     @ManyToOne
     @JoinColumn(name = "supplier_id")
+    @JsonIdentityReference(alwaysAsId = true)
     private Supplier supplier;
 
     /**
      * Inventory entry this egg batch belongs to.
      */
     @OneToMany(mappedBy = "egg", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<InventoryMovement> movements;
 
     /**

@@ -1,5 +1,6 @@
 package com.goldeneggs.OrderEgg;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Order.Order;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ public class OrderEgg {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_order")
+    @JsonIgnore
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,5 +1,7 @@
 package com.goldeneggs.InventoryMovement;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Order.Order;
 import com.goldeneggs.User.User;
@@ -30,20 +32,23 @@ public class InventoryMovement implements Serializable {
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "movement_date", nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date movementDate;
 
-    @Column(name = "honey_combs")
-    private Integer honeyCombs;
+    @Column(name = "combs")
+    private Integer combs;
 
     /**
      * List of eggs associated with this inventory entry.
      */
     @ManyToOne
     @JoinColumn(name = "egg_id", nullable = false)
+    @JsonIdentityReference(alwaysAsId = true)
     private Egg egg;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = true)//puede no venir de una venta
+    @JsonIdentityReference(alwaysAsId = true)
     private Order order;
 
     @ManyToOne
