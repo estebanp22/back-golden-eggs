@@ -6,12 +6,11 @@ import com.goldeneggs.Dto.Statistics.*;
 import com.goldeneggs.Order.Order;
 import com.goldeneggs.Order.OrderRepository;
 import com.goldeneggs.Role.Role;
-import com.goldeneggs.Egg.Egg;
-
 import com.goldeneggs.User.UserRepository;
 import com.goldeneggs.Egg.EggRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,6 +31,20 @@ public class StatisticsService {
     private final EggRepository eggRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Retrieves general statistical data related to bills and orders,
+     * including key performance indicators (KPIs) and chart data.
+     *
+     * The method calculates statistics such as total sales, total orders,
+     * paid and unpaid orders, average ticket size, best customer, most sold
+     * product, last order date, day with least sales, and average time from
+     * order to bill. It also generates data for several charts, including
+     * orders over time, orders by state, paid vs unpaid orders, top customers,
+     * and top products.
+     *
+     * @return a {@code StatisticsResponseDto} object containing the calculated
+     *         general statistics and chart data.
+     */
     public StatisticsResponseDto getGeneralStatistics() {
         StatisticsResponseDto response = new StatisticsResponseDto();
         StatisticsKpiDto kpis = new StatisticsKpiDto();
@@ -40,48 +53,65 @@ public class StatisticsService {
         List<Bill> bills = billRepository.findAll();
         List<Order> orders = orderRepository.findAll();
 
-        // Filtrar solo ingresos
+        if (bills == null || bills.isEmpty() || orders == null || orders.isEmpty()) {
+            response.kpis = kpis;
+            response.charts = charts;
+            return response;
+        }
+
         List<Bill> incomeBills = bills.stream()
-                .filter(b -> b.getOrder().getUser().getRoles().stream()
-                        .map(Role::getName)
-                        .anyMatch(roleName -> roleName.equals("CUSTOMER")))
+                .filter(b -> b != null && b.getOrder() != null && b.getOrder().getUser() != null &&
+                        b.getOrder().getUser().getRoles() != null &&
+                        b.getOrder().getUser().getRoles().stream()
+                                .map(Role::getName)
+                                .anyMatch(role -> role.equalsIgnoreCase("CUSTOMER")))
                 .toList();
 
         List<Order> incomeOrders = orders.stream()
-                .filter(o -> o.getUser().getRoles().stream()
-                        .map(Role::getName)
-                        .anyMatch(roleName -> roleName.equals("CUSTOMER")))
+                .filter(o -> o != null && o.getUser() != null &&
+                        o.getUser().getRoles() != null &&
+                        o.getUser().getRoles().stream()
+                                .map(Role::getName)
+                                .anyMatch(role -> role.equalsIgnoreCase("CUSTOMER")))
                 .toList();
 
-        // KPI: Ventas totales
-        kpis.totalSales = incomeBills.stream().mapToDouble(Bill::getTotalPrice).sum();
+        kpis.totalSales = incomeBills.stream()
+                .mapToDouble(b -> b != null ? b.getTotalPrice() : 0)
+                .sum();
 
-        // KPI: Órdenes totales
         kpis.totalOrders = incomeOrders.size();
 
-        // KPI: Órdenes pagadas vs no pagadas
-        kpis.paidOrders = (int) incomeBills.stream().filter(Bill::isPaid).count();
+        kpis.paidOrders = (int) incomeBills.stream()
+                .filter(b -> b != null && b.isPaid())
+                .count();
+
         kpis.unpaidOrders = incomeBills.size() - kpis.paidOrders;
 
-        // KPI: Ticket promedio
         kpis.averageTicket = incomeOrders.isEmpty() ? 0 :
-                incomeOrders.stream().mapToDouble(Order::getTotalPrice).average().orElse(0);
+                incomeOrders.stream()
+                        .filter(o -> o != null)
+                        .mapToDouble(Order::getTotalPrice)
+                        .average()
+                        .orElse(0);
 
-        // KPI: Mejor cliente
         Map<String, Double> customerSpending = new HashMap<>();
         for (Bill bill : incomeBills) {
-            String name = bill.getOrder().getUser().getName();
-            customerSpending.merge(name, bill.getTotalPrice(), Double::sum);
+            if (bill != null && bill.getOrder() != null && bill.getOrder().getUser() != null) {
+                String name = bill.getOrder().getUser().getName();
+                customerSpending.merge(name, bill.getTotalPrice(), Double::sum);
+            }
         }
+
         kpis.bestCustomer = customerSpending.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse("N/A");
 
-        // KPI: Producto más vendido
         Map<String, Long> productSales = incomeOrders.stream()
-                .flatMap(order -> order.getEggs().stream())
-                .map(egg -> egg.getType().getType() + " - " + egg.getColor()) // clave: tipo + color
+                .filter(o -> o != null && o.getOrderEggs() != null)
+                .flatMap(order -> order.getOrderEggs().stream())
+                .filter(egg -> egg != null && egg.getEgg().getType() != null)
+                .map(egg -> egg.getEgg().getType().getType() + " - " + egg.getEgg().getColor())
                 .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
 
         kpis.mostSoldProduct = productSales.entrySet().stream()
@@ -89,17 +119,16 @@ public class StatisticsService {
                 .map(Map.Entry::getKey)
                 .orElse("N/A");
 
-
-        // KPI: Orden más reciente
         kpis.lastOrderDate = incomeOrders.stream()
+                .filter(o -> o != null && o.getOrderDate() != null)
                 .max(Comparator.comparing(Order::getOrderDate))
                 .map(o -> o.getOrderDate().toString())
                 .orElse("N/A");
 
-        // KPI: Día con menos ventas
         Map<LocalDate, Double> salesPerDay = incomeBills.stream()
+                .filter(b -> b != null && b.getIssueDate() != null)
                 .collect(Collectors.groupingBy(
-                        b -> b.getIssueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                        b -> convertToLocalDate(b.getIssueDate()),
                         Collectors.summingDouble(Bill::getTotalPrice)
                 ));
 
@@ -108,33 +137,40 @@ public class StatisticsService {
                 .map(e -> e.getKey().toString())
                 .orElse("N/A");
 
-        // KPI: Órdenes canceladas
         kpis.cancelledOrders = (int) incomeOrders.stream()
-                .filter(o -> o.getState().equalsIgnoreCase("cancelled"))
+                .filter(o -> o != null && "cancelled".equalsIgnoreCase(o.getState()))
                 .count();
 
-        // KPI: Tiempo promedio entre orden y facturación
         kpis.averageTimeOrderToBill = incomeBills.stream()
+                .filter(b -> b != null && b.getOrder() != null &&
+                        b.getIssueDate() != null && b.getOrder().getOrderDate() != null)
                 .mapToLong(b -> {
                     long diff = b.getIssueDate().getTime() - b.getOrder().getOrderDate().getTime();
                     return TimeUnit.MILLISECONDS.toHours(diff);
                 })
                 .average().orElse(0);
 
-        // Gráficas (ejemplo: ventas por día, top clientes, etc.)
-        charts.salesOverTime = salesPerDay.entrySet().stream()
+        charts.ordersOverTime = incomeOrders.stream()
+                .filter(o -> o != null && o.getOrderDate() != null)
+                .collect(Collectors.groupingBy(
+                        o -> convertToLocalDate(o.getOrderDate()),
+                        Collectors.counting()
+                ))
+                .entrySet().stream()
                 .map(e -> {
-                    TimeSeriesPointDto point = new TimeSeriesPointDto();
-                    point.label = e.getKey().toString();
-                    point.sales = e.getValue();
-                    return point;
+                    TimeSeriesPointDto dto = new TimeSeriesPointDto();
+                    dto.name = e.getKey().toString();
+                    dto.orders = e.getValue().intValue();
+                    return dto;
                 }).toList();
 
         charts.ordersByState = Arrays.asList("pending", "delivered", "cancelled").stream()
                 .map(state -> {
                     DistributionDto dto = new DistributionDto();
-                    dto.label = state;
-                    dto.value = incomeOrders.stream().filter(o -> o.getState().equalsIgnoreCase(state)).count();
+                    dto.name = state;
+                    dto.value = incomeOrders.stream()
+                            .filter(o -> o != null && state.equalsIgnoreCase(o.getState()))
+                            .count();
                     return dto;
                 }).toList();
 
@@ -157,7 +193,21 @@ public class StatisticsService {
 
         response.kpis = kpis;
         response.charts = charts;
-
         return response;
     }
+
+    /**
+     * Converts a java.util.Date, java.sql.Date, or java.sql.Timestamp to LocalDate.
+     */
+    private LocalDate convertToLocalDate(Date date) {
+        if (date instanceof java.sql.Timestamp timestamp) {
+            return timestamp.toLocalDateTime().toLocalDate();
+        } else if (date instanceof java.sql.Date sqlDate) {
+            return sqlDate.toLocalDate();
+        } else if (date != null) {
+            return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        return null;
+    }
+
 }
