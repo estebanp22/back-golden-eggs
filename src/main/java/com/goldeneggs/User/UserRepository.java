@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface    UserRepository extends JpaRepository<User,Long> {
+public interface UserRepository extends JpaRepository<User,Long> {
 
     /**
      * Retrieves a user from the database by their unique username.
@@ -33,5 +33,19 @@ public interface    UserRepository extends JpaRepository<User,Long> {
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
     Long countUsersByRoleName(@Param("roleName") String roleName);
 
+    /**
+     * Checks if a user exists in the database based on their unique email address.
+     *
+     * @param email The email address to check for existence. Must not be null or empty.
+     * @return A boolean value: true if a user with the specified email exists, otherwise false.
+     */
+    boolean existsByEmail(String email);
 
+    /**
+     * Checks if a user exists in the database based on their unique phone number.
+     *
+     * @param phoneNumber The phone number to check for existence. Must not be null or empty.
+     * @return A boolean value: true if a user with the specified phone number exists, otherwise false.
+     */
+    boolean existsByPhoneNumber(String phoneNumber);
 }

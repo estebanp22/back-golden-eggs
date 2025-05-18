@@ -3,7 +3,6 @@ package com.goldeneggs.User;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
 import com.goldeneggs.Dto.UserDataDto;
-import com.goldeneggs.Role.Role;
 
 import java.util.List;
 

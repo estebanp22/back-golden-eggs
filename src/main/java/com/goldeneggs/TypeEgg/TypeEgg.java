@@ -1,6 +1,5 @@
 package com.goldeneggs.TypeEgg;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goldeneggs.Supplier.Supplier;
 import jakarta.persistence.*;
@@ -32,6 +31,10 @@ public class TypeEgg {
     @Column(nullable = false)
     private String type;
 
+    /**
+     * A list of suppliers associated with the current type of egg. These suppliers provide
+     * this specific type of egg to the organization.
+     */
     @ManyToMany(mappedBy = "typeEggs")
     @JsonIgnore
     private List<Supplier> suppliers;

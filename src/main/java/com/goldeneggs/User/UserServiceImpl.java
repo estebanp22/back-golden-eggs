@@ -5,6 +5,7 @@ import com.goldeneggs.Bill.BillRepository;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Dto.UpdateUserDto;
 import com.goldeneggs.Dto.UserDataDto;
+import com.goldeneggs.Exception.InvalidUserDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Exception.UserAlreadyExistsException;
 import com.goldeneggs.Order.Order;
@@ -51,13 +52,29 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User save(RegisterDto registerDto) {
+        // Validate input data first
+        try{
+            UserValidator.validateRegisterDto(registerDto);
+        } catch (UserAlreadyExistsException e) {
+            throw new UserAlreadyExistsException(e.getMessage());
+        } catch (InvalidUserDataException ex){
+            throw new InvalidUserDataException(ex.getMessage());
+        }
 
         if (userRepository.existsByUsername(registerDto.getUsername())) {
-            throw new UserAlreadyExistsException("A user with the username '" + registerDto.getUsername() + "' already exists.");
+            throw new UserAlreadyExistsException("Username '" + registerDto.getUsername() + "' already exists");
         }
 
         if (userRepository.existsById(registerDto.getId())) {
-            throw new UserAlreadyExistsException("A user with the ID '" + registerDto.getId() + "' already exists.");
+            throw new UserAlreadyExistsException("User with ID " + registerDto.getId() + " already exists");
+        }
+
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
+            throw new UserAlreadyExistsException("Email '" + registerDto.getEmail() + "' already exists");
+        }
+
+        if (userRepository.existsByPhoneNumber(registerDto.getPhoneNumber())) {
+            throw new UserAlreadyExistsException("Phone number '" + registerDto.getPhoneNumber() + "' already exists");
         }
 
         User user = new User();
@@ -150,41 +167,55 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     /**
-     * Updates an existing user's information. Only non-null and non-blank fields will be updated.
+     * Updates an existing user with the provided details.
      *
-     * @param id The ID of the user to update.
-     * @param updateUserDto DTO containing the new data.
-     * @return The updated User entity.
-     * @throws ResourceNotFoundException if no user or specified role is found.
+     * @param id the unique identifier of the user to be updated
+     * @param updateUserDto the data transfer object containing the updated user details
+     * @return the updated User object after persisting changes to the repository
+     * @throws UserAlreadyExistsException if the updated attributes (e.g., username, email, phone number)
+     *         conflict with existing users
+     * @throws InvalidUserDataException if the provided data is invalid
+     * @throws ResourceNotFoundException if no user is found with the specified ID
      */
     @Override
     public User updateUser(Long id, UpdateUserDto updateUserDto) {
+
+        try{
+            UserValidator.validateId(id);
+            UserValidator.validateUpdateUserDto(updateUserDto);
+        } catch (UserAlreadyExistsException e) {
+            throw new UserAlreadyExistsException(e.getMessage());
+        } catch (InvalidUserDataException ex){
+            throw new InvalidUserDataException(ex.getMessage());
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
-        if (updateUserDto.getUsername() != null && !updateUserDto.getUsername().isBlank()) {
-            if (userRepository.existsByUsername(updateUserDto.getUsername()) && !user.getUsername().equals(updateUserDto.getUsername())) {
-                throw new UserAlreadyExistsException("A user with the username '" + updateUserDto.getUsername() + "' already exists.");
+        if (updateUserDto.getUsername() != null && !user.getUsername().equals(updateUserDto.getUsername())) {
+            if (userRepository.existsByUsername(updateUserDto.getUsername())) {
+                throw new UserAlreadyExistsException("Username '" + updateUserDto.getUsername() + "' already exists");
             }
             user.setUsername(updateUserDto.getUsername());
         }
 
-        if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
+        if (updateUserDto.getEmail() != null && !user.getEmail().equals(updateUserDto.getEmail())) {
+            if (userRepository.existsByEmail(updateUserDto.getEmail())) {
+                throw new UserAlreadyExistsException("Email '" + updateUserDto.getEmail() + "' already exists");
+            }
+            user.setEmail(updateUserDto.getEmail());
         }
 
-        if (updateUserDto.getName() != null && !updateUserDto.getName().isBlank()) {
-            user.setName(updateUserDto.getName());
-        }
-
-        if (updateUserDto.getPhoneNumber() != null && !updateUserDto.getPhoneNumber().isBlank()) {
+        if (updateUserDto.getPhoneNumber() != null && !user.getPhoneNumber().equals(updateUserDto.getPhoneNumber())) {
+            if (userRepository.existsByPhoneNumber(updateUserDto.getPhoneNumber())) {
+                throw new UserAlreadyExistsException("Phone number '" + updateUserDto.getPhoneNumber() + "' already exists");
+            }
             user.setPhoneNumber(updateUserDto.getPhoneNumber());
         }
 
-        if (updateUserDto.getEmail() != null && !updateUserDto.getEmail().isBlank()) {
-            user.setEmail(updateUserDto.getEmail());
+        if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
         }
 
         if (updateUserDto.getAddress() != null && !updateUserDto.getAddress().isBlank()) {

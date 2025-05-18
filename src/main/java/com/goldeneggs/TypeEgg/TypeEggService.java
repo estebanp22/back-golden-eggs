@@ -16,6 +16,15 @@ public interface TypeEggService {
     TypeEgg save(TypeEgg typeEgg);
 
     /**
+     * Updates an existing TypeEgg with the given updated information.
+     *
+     * @param id the ID of the existing TypeEgg to update
+     * @param updated the new TypeEgg object containing updated details
+     * @return the updated TypeEgg object after persisting changes
+     */
+    TypeEgg update(Long id, TypeEgg updated);
+
+    /**
      * Retrieves all egg types.
      *
      * @return list of all TypeEgg entries

@@ -1,7 +1,10 @@
 package com.goldeneggs.Role;
 
+import com.goldeneggs.Exception.DuplicateRoleNameException;
+import com.goldeneggs.Exception.InvalidRoleDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,7 +12,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/api/v1/role")
+@RequestMapping("/api/v1/roles")
 public class RoleController {
 
     @Autowired
@@ -18,85 +21,92 @@ public class RoleController {
     /**
      * Saves a new role in the system.
      *
-     * @param role Role data to be saved.
-     * @return ResponseEntity with the saved role or a BadRequest if something goes wrong.
+     * @param role the role to be saved, should contain valid data and a unique name
+     * @return a ResponseEntity containing:
+     *         - the created Role with HTTP status 201 (CREATED) on success
+     *         - an error message with HTTP status 400 (BAD REQUEST) if the provided role data is invalid
+     *         - an error message with HTTP status 409 (CONFLICT) if the role name already exists
      */
     @PostMapping("/save")
-    public ResponseEntity<Role> save(@RequestBody Role role) {
+    public ResponseEntity<?> save(@RequestBody Role role) {
         try {
             Role newRole = roleService.insert(role);
-            return ResponseEntity.ok(newRole);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newRole);
+        } catch (InvalidRoleDataException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (DuplicateRoleNameException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
     /**
      * Retrieves all roles from the system.
      *
-     * @return ResponseEntity with a list of all roles.
+     * @return a ResponseEntity containing a list of all roles with HTTP status 200 (OK)
      */
     @GetMapping("/getAll")
     public ResponseEntity<List<Role>> getAll() {
-        try {
-            List<Role> roles = roleService.getAll();
-            return ResponseEntity.ok(roles);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        return ResponseEntity.ok(roleService.getAll());
     }
 
     /**
      * Retrieves a role by its ID.
      *
-     * @param id ID of the role to retrieve.
-     * @return ResponseEntity with the role if found, otherwise a NotFound status.
+     * @param id the ID of the role to retrieve
+     * @return a ResponseEntity containing:
+     *         - the found Role with HTTP status 200 (OK) on success
+     *         - an error message with HTTP status 404 (NOT FOUND) if the role with the specified ID is not found
      */
     @GetMapping("/get/{id}")
-    public ResponseEntity<Role> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable Long id) {
         try {
-            Role role = roleService.get(id);
-            return ResponseEntity.ok(role);
+            return ResponseEntity.ok(roleService.get(id));
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     /**
-     * Updates an existing role.
+     * Updates an existing role with the given data.
      *
-     * @param id   ID of the role to update.
-     * @param role Updated role data.
-     * @return ResponseEntity with the updated role or NotFound status if the role does not exist.
+     * @param id the ID of the role to be updated
+     * @param role the updated role information
+     * @return a ResponseEntity containing:
+     *         - the updated Role with HTTP status 200 (OK) on success
+     *         - an error message with HTTP status 404 (NOT FOUND) if the role with the specified ID is not found
+     *         - an error message with HTTP status 400 (BAD REQUEST) if the provided role data is invalid
+     *         - an error message with HTTP status 409 (CONFLICT) if the role name already exists
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Role> update(@PathVariable Long id, @RequestBody Role role) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Role role) {
         try {
-            role.setId(id);  // Ensure the ID is updated correctly
+            role.setId(id);
             roleService.update(role);
             return ResponseEntity.ok(role);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (InvalidRoleDataException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (DuplicateRoleNameException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
     /**
      * Deletes a role by its ID.
      *
-     * @param id ID of the role to delete.
-     * @return ResponseEntity with no content if deleted or NotFound status if the role does not exist.
+     * @param id the ID of the role to delete
+     * @return a ResponseEntity containing:
+     *         - HTTP status 204 (NO CONTENT) on successful deletion
+     *         - an error message with HTTP status 404 (NOT FOUND) if the role with the specified ID is not found
      */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
             roleService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 }

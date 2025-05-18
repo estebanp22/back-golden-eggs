@@ -1,6 +1,5 @@
 package com.goldeneggs.Order;
 
-import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.OrderEgg.OrderEgg;
 import com.goldeneggs.User.User;
 import jakarta.persistence.*;

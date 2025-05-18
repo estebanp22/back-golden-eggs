@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DistributionDto {
-    public String label;
+    public String name;
     public double value;
 }
