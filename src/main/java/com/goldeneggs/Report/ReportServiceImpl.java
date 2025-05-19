@@ -1,6 +1,8 @@
 package com.goldeneggs.Report;
 
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Pay.Pay;
+import com.goldeneggs.Pay.PayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public Report save(Report report) {
+        validateReportOrThrow(report);
         return reportRepository.save(report);
     }
 
@@ -53,8 +56,9 @@ public class ReportServiceImpl implements ReportService {
      * @return an Optional containing the report if found, otherwise empty
      */
     @Override
-    public Optional<Report> findById(Long id) {
-        return reportRepository.findById(id);
+    public Report get(Long id) {
+        return reportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Report no found with id: " + id));
     }
 
     /**
@@ -67,12 +71,13 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public Report update(Long id, Report report) {
-        return reportRepository.findById(id).map(existing -> {
-            existing.setType(report.getType());
-            existing.setDateReport(report.getDateReport());
-            existing.setContent(report.getContent());
-            return reportRepository.save(existing);
-        }).orElseThrow(() -> new ResourceNotFoundException("Report not found with id " + id));
+        Report existingReport = reportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Report no found with id: " + id));
+
+        existingReport.setType(report.getType());
+        existingReport.setDateReport(report.getDateReport());
+        existingReport.setContent(report.getContent());
+        return reportRepository.save(existingReport);
     }
 
     /**
@@ -82,6 +87,21 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public void delete(Long id) {
+        if (!reportRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Payment not found with ID: " + id);
+        }
         reportRepository.deleteById(id);
+    }
+
+    private void validateReportOrThrow(Report report) {
+        if (!ReportValidator.validateType(report.getType())) {
+            throw new IllegalArgumentException("Tipo de reporte no válido");
+        }
+        if (!ReportValidator.validateDate(report.getDateReport())) {
+            throw new IllegalArgumentException("fecha de reporte inválida");
+        }
+        if (!ReportValidator.validateContent(report.getContent())) {
+            throw new IllegalArgumentException("Contenido invalido");
+        }
     }
 }

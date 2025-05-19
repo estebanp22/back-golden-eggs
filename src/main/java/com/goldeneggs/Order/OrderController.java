@@ -1,8 +1,12 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Exception.InvalidEggDataException;
+import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
 import org.hibernate.service.spi.ServiceException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,8 +70,11 @@ public class OrderController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        return ResponseEntity.ok(order);
+        try {
+            return ResponseEntity.ok(orderService.getOrderById(id));
+        }catch (ResourceNotFoundException e) {
+            return new  ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -78,9 +85,34 @@ public class OrderController {
      * @throws BadRequestException If the order data is invalid or incomplete.
      */
     @PostMapping("/save")
-    public ResponseEntity<Order> saveOrder(@RequestBody Order order) throws BadRequestException {
-        Order savedOrder = orderService.saveOrder(order);
-        return ResponseEntity.ok(savedOrder);
+    public ResponseEntity<?> saveOrder(@RequestBody Order order) throws BadRequestException {
+        try {
+            Order saved =  orderService.saveOrder(order);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        }catch (InvalidOrderDataException e) {
+            return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (Exception e) {
+            return new  ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Updates an existing order.
+     *
+     * @param id ID of the order to update.
+     * @param order Updated order data.
+     * @return Updated order entity.
+     */
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Order order) {
+        try{
+            Order updated = orderService.updateOrder(id, order);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        }catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (InvalidEggDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -92,8 +124,12 @@ public class OrderController {
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
-        return ResponseEntity.noContent().build();
+        try {
+            orderService.deleteOrder(id);
+            return ResponseEntity.ok().build();
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.noContent().build();
+        }
     }
 
     /**

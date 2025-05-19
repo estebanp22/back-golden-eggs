@@ -1,9 +1,13 @@
 package com.goldeneggs.Bill;
 import com.goldeneggs.Dto.BillDto;
+import com.goldeneggs.Exception.InvalidBillDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;
 import com.goldeneggs.Role.Role;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -220,10 +224,21 @@ public class BillServiceImpl implements BillService {
      * Saves a new bill in the repository.
      *
      * @param bill the bill to save.
-     * @return the saved {@link Bill}.
+     * @return InvalidBillDataException if the bill data is invalid
      */
     @Override
     public Bill save(Bill bill) {
+        if (!BillValidator.validateOrder(bill.getOrder())) {
+            throw new InvalidBillDataException("Order is not valid");
+        }
+
+        if (!BillValidator.validateIssueDate((java.sql.Date) bill.getIssueDate())) {
+            throw new  InvalidBillDataException("Issue date is not valid");
+        }
+
+        if (!BillValidator.validateTotalPrice(bill.getTotalPrice())) {
+            throw new  InvalidBillDataException("Total price is not valid");
+        }
         return billRepository.save(bill);
     }
 
@@ -233,19 +248,30 @@ public class BillServiceImpl implements BillService {
      * @param id the ID of the bill to update.
      * @param updatedBill the updated bill data.
      * @return the updated {@link Bill}.
-     * @throws ResourceNotFoundException if the bill does not exist.
+     * @throws InvalidBillDataException if the updated bill data is invalid
      */
     @Override
     public Bill update(Long id, Bill updatedBill) {
         Bill existing = billRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill with ID " + id + " not found"));
+        if (!BillValidator.validateOrder(updatedBill.getOrder())) {
+            throw new InvalidBillDataException("Order is not valid");
+        }
+
+        if (!BillValidator.validateIssueDate((java.sql.Date) updatedBill.getIssueDate())) {
+            throw new  InvalidBillDataException("Issue date is not valid");
+        }
+
+        if (!BillValidator.validateTotalPrice(updatedBill.getTotalPrice())) {
+            throw new  InvalidBillDataException("Total price is not valid");
+        }
 
         existing.setOrder(updatedBill.getOrder());
         existing.setIssueDate(updatedBill.getIssueDate());
         existing.setTotalPrice(updatedBill.getTotalPrice());
         existing.setPaid(updatedBill.isPaid());
 
-        return billRepository.save(existing);
+        return  billRepository.save(existing);
     }
 
     /**

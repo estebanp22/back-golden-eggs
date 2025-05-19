@@ -1,7 +1,9 @@
 package com.goldeneggs.InventoryMovement;
 
+import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +27,15 @@ public class InventoryMovementController {
      * @return ResponseEntity containing the saved inventory item.
      */
     @PostMapping("/save")
-    public ResponseEntity<InventoryMovement> save(@RequestBody InventoryMovement inventoryMovement) {
-        return ResponseEntity.ok(inventoryMovementService.save(inventoryMovement));
+    public ResponseEntity<?> save(@RequestBody InventoryMovement inventoryMovement) {
+        try{
+            InventoryMovement saved = inventoryMovementService.save(inventoryMovement);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        }catch (InvalidInventoryMovementDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -62,10 +71,15 @@ public class InventoryMovementController {
      * @throws ResourceNotFoundException If the inventory item with the given ID does not exist.
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<InventoryMovement> update(@PathVariable Long id, @RequestBody InventoryMovement inventoryMovement) {
-        InventoryMovement updated = inventoryMovementService.update(id, inventoryMovement);
-        if (updated == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody InventoryMovement inventoryMovement) {
+        try{
+            InventoryMovement updated = inventoryMovementService.update(id, inventoryMovement);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        }catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (InvalidInventoryMovementDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -77,7 +91,11 @@ public class InventoryMovementController {
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        inventoryMovementService.delete(id);
-        return ResponseEntity.ok().build();
+        try {
+            inventoryMovementService.delete(id);
+            return ResponseEntity.ok().build();
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.noContent().build();
+        }
     }
 }

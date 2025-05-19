@@ -15,6 +15,8 @@ public class EggServiceImpl implements EggService {
     @Autowired
     private EggRepository eggRepository;
 
+    private EggValidator eggValidator;
+
     /**
      * Retrieves all eggs from the database.
      *
@@ -45,6 +47,7 @@ public class EggServiceImpl implements EggService {
      */
     @Override
     public Egg save(Egg egg) {
+        validateEggOrThrow(egg);
         return eggRepository.save(egg);
     }
 
@@ -59,6 +62,8 @@ public class EggServiceImpl implements EggService {
     public Egg update(Long id, Egg updatedEgg) {
         Egg existing = eggRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Egg with ID " + id + " not found"));
+
+        validateEggOrThrow(updatedEgg);
 
         existing.setType(updatedEgg.getType());
         existing.setColor(updatedEgg.getColor());
@@ -77,6 +82,9 @@ public class EggServiceImpl implements EggService {
      */
     @Override
     public void delete(Long id) {
+        if(!eggRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Egg with ID " + id + " not found");
+        }
         eggRepository.deleteById(id);
     }
 
@@ -92,4 +100,27 @@ public class EggServiceImpl implements EggService {
         return total != null ? total : 0;
     }
 
+    private void validateEggOrThrow(Egg egg) {
+        if (!eggValidator.validateTypeEgg(egg.getType())) {
+            throw new IllegalArgumentException("Tipo de huevo no válido o no existente");
+        }
+        if (!EggValidator.validateColor(egg.getColor())) {
+            throw new IllegalArgumentException("Color no válido");
+        }
+        if (!EggValidator.validateBuyPrice(egg.getBuyPrice())) {
+            throw new IllegalArgumentException("Precio de compra inválido");
+        }
+        if (!EggValidator.validateSalePrice(egg.getBuyPrice(), egg.getSalePrice())) {
+            throw new IllegalArgumentException("Precio de venta debe ser mayor o igual al de compra");
+        }
+        if (!EggValidator.validateExpirationDate(egg.getExpirationDate())) {
+            throw new IllegalArgumentException("La fecha de expiración debe ser hoy o futura");
+        }
+        if (!eggValidator.validateSupplier(egg.getSupplier())) {
+            throw new IllegalArgumentException("Proveedor no válido o inexistente");
+        }
+        if (!EggValidator.validateAviableQuantity(egg.getAvibleQuantity())) {
+            throw new IllegalArgumentException("Cantidad no válida");
+        }
+    }
 }
