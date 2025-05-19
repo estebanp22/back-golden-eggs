@@ -1,6 +1,9 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Exception.InvalidEggDataException;
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +27,15 @@ public class EggController {
      * @return Saved egg entity.
      */
     @PostMapping("/save")
-    public ResponseEntity<Egg> save(@RequestBody Egg egg) {
-        return ResponseEntity.ok(eggService.save(egg));
+    public ResponseEntity<?> save(@RequestBody Egg egg) {
+        try{
+            Egg saved =  eggService.save(egg);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        }catch (InvalidEggDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -36,7 +46,11 @@ public class EggController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Egg> get(@PathVariable Long id) {
-        return ResponseEntity.ok(eggService.get(id));
+        try{
+            return  ResponseEntity.ok(eggService.get(id));
+        }catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -57,8 +71,15 @@ public class EggController {
      * @return Updated egg entity.
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Egg> update(@PathVariable Long id, @RequestBody Egg egg) {
-        return ResponseEntity.ok(eggService.update(id, egg));
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Egg egg) {
+        try{
+            Egg updated = eggService.update(id, egg);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        }catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (InvalidEggDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -69,8 +90,12 @@ public class EggController {
      */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        eggService.delete(id);
-        return ResponseEntity.ok().build();
+        try {
+            eggService.delete(id);
+            return ResponseEntity.ok().build();
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.noContent().build();
+        }
     }
 
     /**

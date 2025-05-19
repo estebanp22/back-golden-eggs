@@ -29,7 +29,7 @@ public interface ReportService {
      * @param id ID of the report.
      * @return An Optional containing the found report, or empty if not found.
      */
-    Optional<Report> findById(Long id);
+    Report get(Long id);
 
     /**
      * Updates an existing report.

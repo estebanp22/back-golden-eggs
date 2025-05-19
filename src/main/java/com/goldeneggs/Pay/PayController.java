@@ -1,7 +1,9 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +27,15 @@ public class PayController {
      * @return Saved payment.
      */
     @PostMapping("/save")
-    public ResponseEntity<Pay> save(@RequestBody Pay pay) {
-        return ResponseEntity.ok(payService.save(pay));
+    public ResponseEntity<?> save(@RequestBody Pay pay) {
+        try {
+         Pay saved = payService.save(pay);
+         return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        }catch (InvalidPayDataException e){
+            return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -63,12 +72,14 @@ public class PayController {
      * @return Updated payment if found, or 404 Not Found.
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Pay> update(@PathVariable Long id, @RequestBody Pay pay) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Pay pay) {
         try {
             Pay updated = payService.update(id, pay);
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (InvalidPayDataException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 

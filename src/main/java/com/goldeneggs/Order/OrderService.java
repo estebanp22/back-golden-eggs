@@ -38,6 +38,15 @@ public interface OrderService {
     Order saveOrder(Order order) throws BadRequestException;
 
     /**
+     * Update a existing order.
+     *
+     * @param id order existing
+     * @param order new order
+     * @return The updated order.
+     * @throws BadRequestException If the provided order data is invalid or incomplete.
+     */
+    Order updateOrder(Long id, Order order);
+    /**
      * Deletes an order by its ID.
      *
      * @param id The ID of the order to delete.

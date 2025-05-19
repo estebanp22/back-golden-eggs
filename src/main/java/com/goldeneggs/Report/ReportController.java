@@ -1,6 +1,10 @@
 package com.goldeneggs.Report;
 
+import com.goldeneggs.Exception.InvalidPayDataException;
+import com.goldeneggs.Exception.InvalidReportDataException;
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +20,10 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @Autowired
     public ReportController(ReportService reportService) {
         this.reportService = reportService;
     }
+
 
     /**
      * Creates a new report.
@@ -28,8 +32,15 @@ public class ReportController {
      * @return the created report
      */
     @PostMapping("/save")
-    public ResponseEntity<Report> createReport(@RequestBody Report report) {
-        return ResponseEntity.ok(reportService.save(report));
+    public ResponseEntity<?> createReport(@RequestBody Report report) {
+        try{
+            Report savedReport = reportService.save(report);
+            return new ResponseEntity<>(savedReport, HttpStatus.CREATED);
+        }catch (InvalidReportDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -50,9 +61,12 @@ public class ReportController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Report> getReportById(@PathVariable Long id) {
-        return reportService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try{
+            Report report = reportService.get(id);
+            return new ResponseEntity<>(report, HttpStatus.OK);
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -63,11 +77,14 @@ public class ReportController {
      * @return the updated report if found, otherwise 404
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Report> updateReport(@PathVariable Long id, @RequestBody Report report) {
+    public ResponseEntity<?> updateReport(@PathVariable Long id, @RequestBody Report report) {
         try {
-            return ResponseEntity.ok(reportService.update(id, report));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            Report updatedReport = reportService.update(id, report);
+            return ResponseEntity.ok(updatedReport);
+        }  catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (InvalidPayDataException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -82,7 +99,7 @@ public class ReportController {
         try {
             reportService.delete(id);
             return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
+        } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }

@@ -1,8 +1,10 @@
 package com.goldeneggs.Bill;
 
 import com.goldeneggs.Dto.BillDto;
+import com.goldeneggs.Exception.InvalidBillDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +28,15 @@ public class BillController {
      * @return The saved {@link Bill} entity.
      */
     @PostMapping("/save")
-    public ResponseEntity<Bill> save(@RequestBody Bill bill) {
-        return ResponseEntity.ok(billService.save(bill));
+    public ResponseEntity<?> save(@RequestBody Bill bill) {
+        try{
+            Bill saved = billService.save(bill);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        }catch (InvalidBillDataException e){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.BAD_REQUEST);
+        }catch(Exception e){
+            return new ResponseEntity<>("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -39,7 +48,11 @@ public class BillController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<Bill> get(@PathVariable Long id) {
-        return ResponseEntity.ok(billService.get(id));
+        try{
+            return ResponseEntity.ok(billService.get(id));
+        }catch(ResourceNotFoundException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -61,8 +74,11 @@ public class BillController {
      */
     @GetMapping("/byCustomer/{id}")
     public ResponseEntity<List<BillDto>> getBillsByCustomer(@PathVariable Long id) {
-        List<BillDto> customerBills = billService.getBillsByCustomer(id);
-        return ResponseEntity.ok(customerBills);
+        try{
+           return ResponseEntity.ok(billService.getBillsByCustomer(id));
+        }catch(ResourceNotFoundException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
 
@@ -126,8 +142,15 @@ public class BillController {
      * @throws ResourceNotFoundException if the bill is not found.
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<Bill> update(@PathVariable Long id, @RequestBody Bill bill) {
-        return ResponseEntity.ok(billService.update(id, bill));
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Bill bill) {
+        try{
+            Bill saved = billService.update(id, bill);
+            return new ResponseEntity<>(saved, HttpStatus.OK);
+        }catch(ResourceNotFoundException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }catch(InvalidBillDataException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -138,9 +161,13 @@ public class BillController {
      * @throws ResourceNotFoundException if the bill is not found.
      */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        billService.delete(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            billService.delete(id);
+            return ResponseEntity.ok().build();
+        }catch(ResourceNotFoundException e){
+            return ResponseEntity.noContent().build();
+        }
     }
 
     /**

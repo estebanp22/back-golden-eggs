@@ -1,5 +1,7 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Egg.EggValidator;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ public class PayServiceImpl implements PayService {
      */
     @Override
     public Pay save(Pay pay) {
+        validatePayOrThrow(pay);
         return payRepository.save(pay);
     }
 
@@ -52,8 +55,10 @@ public class PayServiceImpl implements PayService {
      */
     @Override
     public Pay update(Long id, Pay updatedPay) {
-        Pay existing = get(id); // will throw ResourceNotFoundException if not found
+        Pay existing = payRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Pay with ID " + id + " not found"));
 
+        validatePayOrThrow(updatedPay);
         existing.setUser(updatedPay.getUser());
         existing.setBill(updatedPay.getBill());
         existing.setAmountPaid(updatedPay.getAmountPaid());
@@ -100,5 +105,20 @@ public class PayServiceImpl implements PayService {
         Double total = payRepository.sumAmountPaidInCurrentMonth(startOfMonth, today);
 
         return total != null ? total : 0.0;
+    }
+
+    private void validatePayOrThrow(Pay pay) {
+        if (!PayValidator.validateUser(pay.getUser())) {
+            throw new IllegalArgumentException("Usuario no válido");
+        }
+        if (!PayValidator.validateBill(pay.getBill())) {
+            throw new IllegalArgumentException("factura de compra inválida");
+        }
+        if (!PayValidator.validateAmountPaid(pay.getAmountPaid())) {
+            throw new IllegalArgumentException("Monto pagado invalido");
+        }
+        if (!PayValidator.validatePaymentMethod(pay.getPaymentMethod())) {
+            throw new IllegalArgumentException("El metodo de pago no es valido");
+        }
     }
 }

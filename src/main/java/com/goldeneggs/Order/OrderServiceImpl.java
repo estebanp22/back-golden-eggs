@@ -81,10 +81,23 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public Order saveOrder(Order order) throws BadRequestException {
-        if (order == null) {
-            throw new BadRequestException("Order data cannot be null.");
-        }
+        validateOrderOrThrow(order);
         return orderRepository.save(order);
+    }
+
+    @Override
+    public Order updateOrder(Long id, Order order) {
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order with ID " + id + " not found."));
+
+        validateOrderOrThrow(existing);
+
+        existing.setUser(order.getUser());
+        existing.setOrderEggs(order.getOrderEggs());
+        existing.setTotalPrice(order.getTotalPrice());
+        existing.setOrderDate(order.getOrderDate());
+        existing.setState(order.getState());
+        return orderRepository.save(existing);
     }
 
     /**
@@ -135,5 +148,21 @@ public class OrderServiceImpl implements OrderService {
         return count != null ? count : 0L;
     }
 
-
+    private void validateOrderOrThrow(Order order) {
+        if(!OrderValidator.validateUser(order.getUser())){
+            throw new IllegalArgumentException("User is not valid.");
+        }
+        if(!OrderValidator.validateOrderEggs(order.getOrderEggs())){
+            throw new IllegalArgumentException("Order Eggs are not valid.");
+        }
+        if(!OrderValidator.validateTotalPrice(order.getTotalPrice())){
+            throw new IllegalArgumentException("Total price is not valid.");
+        }
+        if(!OrderValidator.validateOrderDate(order.getOrderDate())){
+            throw new IllegalArgumentException("Order date is not valid.");
+        }
+        if(!OrderValidator.validateState(order.getState())){
+            throw new IllegalArgumentException("Order state is not valid.");
+        }
+    }
 }
