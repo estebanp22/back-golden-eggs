@@ -17,9 +17,8 @@ public interface UserService {
      *
      * @param registerDto The DTO containing user registration details.
      * @return The saved User object.
-     * @throws Exception If there are issues during the user creation process.
      */
-    User save(RegisterDto registerDto) throws Exception;
+    User save(RegisterDto registerDto);
 
     /**
      * Retrieves a user by their ID.
