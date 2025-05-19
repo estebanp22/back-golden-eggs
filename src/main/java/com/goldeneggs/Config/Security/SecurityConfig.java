@@ -39,6 +39,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/v1/visits").permitAll()
                                 .requestMatchers("/api/v1/visits/count").hasAnyAuthority("ADMIN")
