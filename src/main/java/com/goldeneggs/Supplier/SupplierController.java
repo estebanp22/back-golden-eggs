@@ -35,8 +35,6 @@ public class SupplierController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (InvalidSupplierDataException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -59,8 +57,6 @@ public class SupplierController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (InvalidSupplierDataException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

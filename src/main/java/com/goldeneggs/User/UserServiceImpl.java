@@ -55,8 +55,6 @@ public class UserServiceImpl implements UserService {
         // Validate input data first
         try{
             UserValidator.validateRegisterDto(registerDto);
-        } catch (UserAlreadyExistsException e) {
-            throw new UserAlreadyExistsException(e.getMessage());
         } catch (InvalidUserDataException ex){
             throw new InvalidUserDataException(ex.getMessage());
         }
@@ -184,9 +182,7 @@ public class UserServiceImpl implements UserService {
         try{
             UserValidator.validateId(id);
             UserValidator.validateUpdateUserDto(updateUserDto);
-        } catch (UserAlreadyExistsException e) {
-            throw new UserAlreadyExistsException(e.getMessage());
-        } catch (InvalidUserDataException ex){
+        }  catch (InvalidUserDataException ex){
             throw new InvalidUserDataException(ex.getMessage());
         }
 
