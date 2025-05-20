@@ -216,5 +216,20 @@ public class UserController {
     public ResponseEntity<Long> countEmployees() {
         return ResponseEntity.ok(userService.countEmployees());
     }
+
+    /**
+     * Retrieves all users with the role CUSTOMER.
+     *
+     * @return list of customers
+     */
+    @GetMapping("/getAllCustomers")
+    public ResponseEntity<List<User>> getAllCustomers() {
+        List<User> customers = userService.getAllCustomers();
+        if (customers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(customers);
+    }
+
 }
 

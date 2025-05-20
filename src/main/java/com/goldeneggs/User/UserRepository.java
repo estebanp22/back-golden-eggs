@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User,Long> {
@@ -48,4 +49,14 @@ public interface UserRepository extends JpaRepository<User,Long> {
      * @return A boolean value: true if a user with the specified phone number exists, otherwise false.
      */
     boolean existsByPhoneNumber(String phoneNumber);
+
+    /**
+     * Retrieves a list of users that are associated with a specific role name and are enabled.
+     *
+     * @param roleName The name of the role to filter the users by. Must not be null or empty.
+     * @return A list of User objects that have the specified role name and are enabled.
+     */
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.enabled = true")
+    List<User> findAllByRoleNameAndEnabledIsTrue(@Param("roleName") String roleName);
+
 }
