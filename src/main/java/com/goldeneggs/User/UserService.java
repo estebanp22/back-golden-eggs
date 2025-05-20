@@ -85,6 +85,13 @@ public interface UserService {
     User activateUser(Long id);
 
     /**
+     * Retrieves a list of all customers in the system.
+     *
+     * @return A list of User objects representing all customers.
+     */
+    List<User> getAllCustomers();
+
+    /**
      * Counts the total number of clients in the system.
      *
      * @return the total number of clients as a Long value.

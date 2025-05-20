@@ -302,6 +302,17 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Retrieves all users that have the CUSTOMER role.
+     *
+     * @return list of users with role CUSTOMER
+     */
+    @Override
+    public List<User> getAllCustomers() {
+        return userRepository.findAllByRoleNameAndEnabledIsTrue("CUSTOMER");
+    }
+
+
+    /**
      * Counts the number of users with the role "Customer".
      *
      * @return The total count of clients as a Long value.

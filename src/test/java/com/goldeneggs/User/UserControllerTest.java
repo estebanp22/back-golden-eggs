@@ -18,6 +18,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -311,4 +312,27 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("5"));
     }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void testGetAllCustomers_ShouldReturnListOfCustomers() throws Exception {
+        User customer = new User();
+        customer.setUsername("customer1");
+
+        when(userService.getAllCustomers()).thenReturn(List.of(customer));
+
+        mockMvc.perform(get("/api/v1/users/getAllCustomers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("customer1"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void testGetAllCustomers_ShouldReturnNoContent() throws Exception {
+        when(userService.getAllCustomers()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/v1/users/getAllCustomers"))
+                .andExpect(status().isNoContent());
+    }
+
 }

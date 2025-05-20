@@ -637,4 +637,27 @@ class UserServiceImplTest {
         verify(userRepository).countUsersByRoleName("Employee");
     }
 
+    @Test
+    void getAllCustomers_ShouldReturnListOfCustomers() {
+        User customer1 = new User();
+        customer1.setUsername("customer1");
+        User customer2 = new User();
+        customer2.setUsername("customer2");
+
+        Role customerRole = new Role();
+        customerRole.setName("CUSTOMER");
+        customer1.setRoles(List.of(customerRole));
+        customer2.setRoles(List.of(customerRole));
+
+        when(userRepository.findAllByRoleNameAndEnabledIsTrue("CUSTOMER"))
+                .thenReturn(List.of(customer1, customer2));
+
+        List<User> result = userService.getAllCustomers();
+
+        assertEquals(2, result.size());
+        assertEquals("customer1", result.get(0).getUsername());
+        verify(userRepository).findAllByRoleNameAndEnabledIsTrue("CUSTOMER");
+    }
+
+
 }
