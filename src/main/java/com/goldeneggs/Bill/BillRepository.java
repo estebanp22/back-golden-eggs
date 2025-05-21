@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 
 /**
@@ -43,5 +43,5 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     @Query("SELECT b FROM Bill b WHERE b.order.user.id = :customerId")
     List<Bill> findAllByCustomerId(@Param("customerId") Long customerId);
 
-
+    List<Bill> findByIssueDateBetween(Date startDate, Date endDate);
 }

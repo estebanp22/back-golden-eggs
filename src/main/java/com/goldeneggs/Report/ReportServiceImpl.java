@@ -1,5 +1,6 @@
 package com.goldeneggs.Report;
 
+import com.goldeneggs.Exception.InvalidReportDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Pay.Pay;
 import com.goldeneggs.Pay.PayValidator;
@@ -95,13 +96,13 @@ public class ReportServiceImpl implements ReportService {
 
     private void validateReportOrThrow(Report report) {
         if (!ReportValidator.validateType(report.getType())) {
-            throw new IllegalArgumentException("Tipo de reporte no válido");
+            throw new InvalidReportDataException("Tipo de reporte no válido");
         }
         if (!ReportValidator.validateDate(report.getDateReport())) {
-            throw new IllegalArgumentException("fecha de reporte inválida");
+            throw new InvalidReportDataException("fecha de reporte inválida");
         }
         if (!ReportValidator.validateContent(report.getContent())) {
-            throw new IllegalArgumentException("Contenido invalido");
+            throw new InvalidReportDataException("Contenido invalido");
         }
     }
 }

@@ -91,8 +91,6 @@ public class OrderController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidOrderDataException e) {
             return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }catch (Exception e) {
-            return new  ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -110,7 +108,7 @@ public class OrderController {
             return new ResponseEntity<>(updated, HttpStatus.OK);
         }catch (ResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }catch (InvalidEggDataException e){
+        }catch (InvalidOrderDataException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }

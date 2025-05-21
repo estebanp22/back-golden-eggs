@@ -1,7 +1,6 @@
 package com.goldeneggs.InventoryMovement;
 
-import com.goldeneggs.Egg.Egg;
-import com.goldeneggs.Egg.EggValidator;
+import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     @Autowired
     private InventoryMovementRepository inventoryMovementRepository;
 
+    @Autowired
     private InventoryMovementValidator inventoryMovementValidator;
 
     /**
@@ -84,16 +84,16 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
 
     private void validateInventoryMovementOrThrow(InventoryMovement movement) {
         if (!inventoryMovementValidator.validateEgg(movement.getEgg())) {
-            throw new IllegalArgumentException("Huevo no válido o no existente");
+            throw new InvalidInventoryMovementDataException("Huevo no válido o no existente");
         }
-        if (!InventoryMovementValidator.validateMovementDate(movement.getMovementDate())) {
-            throw new IllegalArgumentException("Fecha no válida");
+        if (!inventoryMovementValidator.validateMovementDate(movement.getMovementDate())) {
+            throw new InvalidInventoryMovementDataException("Fecha no válida");
         }
-        if (!InventoryMovementValidator.validateCombs(movement.getCombs())) {
-            throw new IllegalArgumentException("Panales requeridos inválidos");
+        if (!inventoryMovementValidator.validateCombs(movement.getCombs())) {
+            throw new InvalidInventoryMovementDataException("Panales requeridos inválidos");
         }
         if (!inventoryMovementValidator.validateUser(movement.getUser())) {
-            throw new IllegalArgumentException("Usuario no válido");
+            throw new InvalidInventoryMovementDataException("Usuario no válido");
         }
     }
 }

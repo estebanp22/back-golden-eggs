@@ -34,8 +34,6 @@ public class BillController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidBillDataException e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.BAD_REQUEST);
-        }catch(Exception e){
-            return new ResponseEntity<>("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

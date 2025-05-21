@@ -33,8 +33,6 @@ public class InventoryMovementController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidInventoryMovementDataException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -47,9 +45,11 @@ public class InventoryMovementController {
      */
     @GetMapping("/get/{id}")
     public ResponseEntity<InventoryMovement> get(@PathVariable Long id) {
-        InventoryMovement inv = inventoryMovementService.get(id);
-        if (inv == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(inv);
+        try{
+            return ResponseEntity.ok(inventoryMovementService.get(id));
+        }catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**

@@ -1,8 +1,7 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
-import org.apache.coyote.BadRequestException;
-import org.hibernate.service.spi.ServiceException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,16 +34,9 @@ public class OrderServiceImpl implements OrderService {
      * Retrieves all orders in the system.
      *
      * @return A list of all orders.
-     * @throws ServiceException If an error occurs while fetching the orders from the repository.
      */
     @Override
-    public List<Order> getAllOrders() {
-        try {
-            return orderRepository.findAll();
-        } catch (Exception e) {
-            throw new ServiceException("Error retrieving orders.", e);
-        }
-    }
+    public List<Order> getAllOrders() {return orderRepository.findAll();}
 
     /**
      * Finds an order by its ID.
@@ -56,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long id) {
         return orderRepository.findById(id).orElseThrow(() ->
-                new ResourceNotFoundException("Order with ID " + id + " not found.")
+                new ResourceNotFoundException("Order not found with ID: " + id)
         );
     }
 
@@ -76,11 +68,10 @@ public class OrderServiceImpl implements OrderService {
      * Saves a new or existing order.
      *
      * @param order The order to save.
-     * @return The saved order.
-     * @throws BadRequestException If the provided order data is invalid or incomplete.
+     * @return The saved order. or error
      */
     @Override
-    public Order saveOrder(Order order) throws BadRequestException {
+    public Order saveOrder(Order order){
         validateOrderOrThrow(order);
         return orderRepository.save(order);
     }
@@ -131,7 +122,6 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * Counts the number of orders placed within the current month.
-     *
      * This method calculates the start and end dates of the current month
      * and queries the order repository to determine the total count of orders
      * placed during this period.
@@ -150,19 +140,19 @@ public class OrderServiceImpl implements OrderService {
 
     private void validateOrderOrThrow(Order order) {
         if(!OrderValidator.validateUser(order.getUser())){
-            throw new IllegalArgumentException("User is not valid.");
+            throw new InvalidOrderDataException("User is not valid.");
         }
         if(!OrderValidator.validateOrderEggs(order.getOrderEggs())){
-            throw new IllegalArgumentException("Order Eggs are not valid.");
+            throw new InvalidOrderDataException("Order Eggs are not valid.");
         }
         if(!OrderValidator.validateTotalPrice(order.getTotalPrice())){
-            throw new IllegalArgumentException("Total price is not valid.");
+            throw new InvalidOrderDataException("Total price is not valid.");
         }
         if(!OrderValidator.validateOrderDate(order.getOrderDate())){
-            throw new IllegalArgumentException("Order date is not valid.");
+            throw new InvalidOrderDataException("Order date is not valid.");
         }
         if(!OrderValidator.validateState(order.getState())){
-            throw new IllegalArgumentException("Order state is not valid.");
+            throw new InvalidOrderDataException("Order state is not valid.");
         }
     }
 }

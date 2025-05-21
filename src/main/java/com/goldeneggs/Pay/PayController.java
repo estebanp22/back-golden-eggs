@@ -33,8 +33,6 @@ public class PayController {
          return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidPayDataException e){
             return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -4,16 +4,13 @@ import com.goldeneggs.Exception.InvalidBillDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;
 import com.goldeneggs.Role.Role;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,7 +72,6 @@ public class BillServiceImpl implements BillService {
                 })
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Retrieves all bills that are associated with company users,
@@ -160,14 +156,14 @@ public class BillServiceImpl implements BillService {
                             .map(Role::getName)
                             .toList();
 
-                    LocalDate issueLocalDate = bill.getIssueDate()
-                            .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    // Conversión segura de java.sql.Date a LocalDate
+                    LocalDate issueLocalDate = bill.getIssueDate().toLocalDate();
 
                     return roles.contains("CUSTOMER") &&
                             YearMonth.from(issueLocalDate).equals(currentMonth);
                 })
-                .map(Bill::getTotalPrice)
-                .reduce(0.0, Double::sum);
+                .mapToDouble(Bill::getTotalPrice)
+                .sum();
     }
 
     /**
@@ -189,8 +185,8 @@ public class BillServiceImpl implements BillService {
                             .map(Role::getName)
                             .toList();
 
-                    LocalDate issueLocalDate = bill.getIssueDate()
-                            .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    // Conversión segura de java.sql.Date a LocalDate
+                    LocalDate issueLocalDate = bill.getIssueDate().toLocalDate();
 
                     return roles.contains("CUSTOMER") &&
                             YearMonth.from(issueLocalDate).equals(currentMonth);
@@ -199,7 +195,6 @@ public class BillServiceImpl implements BillService {
                         bill -> bill.getOrder().getUser().getName(),
                         Collectors.summingDouble(Bill::getTotalPrice)
                 ));
-
         return spendingByCustomer.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
@@ -217,7 +212,7 @@ public class BillServiceImpl implements BillService {
     @Override
     public Bill get(Long id) {
         return billRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with ID: " + id));
     }
 
     /**
@@ -228,17 +223,7 @@ public class BillServiceImpl implements BillService {
      */
     @Override
     public Bill save(Bill bill) {
-        if (!BillValidator.validateOrder(bill.getOrder())) {
-            throw new InvalidBillDataException("Order is not valid");
-        }
-
-        if (!BillValidator.validateIssueDate((java.sql.Date) bill.getIssueDate())) {
-            throw new  InvalidBillDataException("Issue date is not valid");
-        }
-
-        if (!BillValidator.validateTotalPrice(bill.getTotalPrice())) {
-            throw new  InvalidBillDataException("Total price is not valid");
-        }
+        validateBillOrThrow(bill);
         return billRepository.save(bill);
     }
 
@@ -254,17 +239,8 @@ public class BillServiceImpl implements BillService {
     public Bill update(Long id, Bill updatedBill) {
         Bill existing = billRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill with ID " + id + " not found"));
-        if (!BillValidator.validateOrder(updatedBill.getOrder())) {
-            throw new InvalidBillDataException("Order is not valid");
-        }
 
-        if (!BillValidator.validateIssueDate((java.sql.Date) updatedBill.getIssueDate())) {
-            throw new  InvalidBillDataException("Issue date is not valid");
-        }
-
-        if (!BillValidator.validateTotalPrice(updatedBill.getTotalPrice())) {
-            throw new  InvalidBillDataException("Total price is not valid");
-        }
+        validateBillOrThrow(updatedBill);
 
         existing.setOrder(updatedBill.getOrder());
         existing.setIssueDate(updatedBill.getIssueDate());
@@ -301,15 +277,27 @@ public class BillServiceImpl implements BillService {
     public Long countCustomerBillsInCurrentMonth() {
         LocalDate now = LocalDate.now();
 
-        Date start = Date.from(
-                now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
-        );
-        Date end = Date.from(
-                now.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
-        );
+        // Primer día del mes (a medianoche)
+        java.sql.Date start = java.sql.Date.valueOf(now.withDayOfMonth(1));
+
+        // Primer día del siguiente mes (a medianoche)
+        java.sql.Date end = java.sql.Date.valueOf(now.plusMonths(1).withDayOfMonth(1));
 
         Long count = billRepository.countCustomerBillsInCurrentMonth(start, end);
         return count != null ? count : 0L;
     }
 
+    private void validateBillOrThrow(Bill bill) {
+        if (!BillValidator.validateOrder(bill.getOrder())) {
+            throw new InvalidBillDataException("Order is not valid");
+        }
+
+        if (!BillValidator.validateIssueDate(bill.getIssueDate())) {
+            throw new  InvalidBillDataException("Issue date is not valid");
+        }
+
+        if (!BillValidator.validateTotalPrice(bill.getTotalPrice())) {
+            throw new  InvalidBillDataException("Total price is not valid");
+        }
+    }
 }
