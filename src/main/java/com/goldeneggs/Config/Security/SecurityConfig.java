@@ -39,16 +39,27 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                                // === SWAGGER ===
+                                .requestMatchers(
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/v3/api-docs",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll()
 
+                                // === AUTH ===
                                 .requestMatchers("/api/auth/**").permitAll()
+
+                                // === ENDPOINTS PÚBLICOS ===
                                 .requestMatchers("/api/v1/visits").permitAll()
-                                .requestMatchers("/api/v1/visits/count").hasAnyAuthority("ADMIN")
-                                .requestMatchers("/api/v1/bills/**").hasAuthority("ADMIN")
-
                                 .requestMatchers("/api/v1/eggs/getAll").permitAll()
-                                .requestMatchers("/api/v1/eggs/**").hasAuthority("ADMIN")
 
+                                // === ENDPOINTS PROTEGIDOS ===
+                                .requestMatchers("/api/v1/visits/count").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/bills/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/eggs/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/inventories/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/orders/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/payments/**").hasAuthority("ADMIN")
@@ -57,6 +68,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/suppliers/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/egg-types/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
+
+                                // === TODO LO DEMÁS: REQUIERE AUTENTICACIÓN ===
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
@@ -66,10 +79,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost/", "http://localhost:8080", "http://localhost:80", "http://localhost"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
