@@ -4,10 +4,12 @@ import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Egg.EggRepository;
 import com.goldeneggs.User.User;
 import com.goldeneggs.User.UserRepository;
+import org.springframework.stereotype.Component;
 
 
 import java.util.Date;
 
+@Component
 public class InventoryMovementValidator {
 
     private final EggRepository eggRepository;
@@ -18,9 +20,9 @@ public class InventoryMovementValidator {
         this.userRepository = userRepository;
     }
 
-    public static boolean validateMovementDate(Date movementDate) { return movementDate != null &&  (movementDate.getTime() <= System.currentTimeMillis());}
+    public boolean validateMovementDate(Date movementDate) { return movementDate != null &&  (movementDate.getTime() <= System.currentTimeMillis());}
 
-    public static boolean validateCombs(int combs) {return combs > 0;}
+    public boolean validateCombs(int combs) {return combs > 0;}
 
     public boolean validateEgg(Egg egg) { return egg != null && egg.getId() != null && eggRepository.existsById(egg.getId());}
 

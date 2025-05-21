@@ -3,6 +3,7 @@ package com.goldeneggs.Report;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Date;
 import java.time.LocalDate;
 
 /**
@@ -34,7 +35,7 @@ public class Report {
      * The date the report was created or registered.
      */
     @Column(name = "date_report", nullable = false)
-    private LocalDate dateReport;
+    private Date dateReport;
 
     /**
      * The full content or description of the report.

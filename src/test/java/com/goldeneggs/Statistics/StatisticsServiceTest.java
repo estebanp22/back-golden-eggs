@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,14 +71,14 @@ class StatisticsServiceTest {
         Order order = new Order();
         order.setUser(user);
         order.setTotalPrice(100);
-        order.setOrderDate(new Date());
+        order.setOrderDate(new java.sql.Date(System.currentTimeMillis()));
         order.setState("delivered");
 
         Bill bill = new Bill();
         bill.setOrder(order);
         bill.setPaid(true);
         bill.setTotalPrice(100);
-        bill.setIssueDate(new Date());
+        bill.setIssueDate(new java.sql.Date(System.currentTimeMillis()));
 
         when(billRepository.findAll()).thenReturn(List.of(bill));
         when(orderRepository.findAll()).thenReturn(List.of(order));

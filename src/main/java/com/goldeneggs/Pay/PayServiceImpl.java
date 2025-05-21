@@ -1,7 +1,6 @@
 package com.goldeneggs.Pay;
 
-import com.goldeneggs.Egg.Egg;
-import com.goldeneggs.Egg.EggValidator;
+import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,9 @@ public class PayServiceImpl implements PayService {
 
     @Autowired
     private PayRepository payRepository;
+
+    @Autowired
+    private PayValidator payValidator;
 
     /**
      * {@inheritDoc}
@@ -108,17 +110,17 @@ public class PayServiceImpl implements PayService {
     }
 
     private void validatePayOrThrow(Pay pay) {
-        if (!PayValidator.validateUser(pay.getUser())) {
-            throw new IllegalArgumentException("Usuario no válido");
+        if (!payValidator.validateUser(pay.getUser())) {
+            throw new InvalidPayDataException("Usuario no válido");
         }
-        if (!PayValidator.validateBill(pay.getBill())) {
-            throw new IllegalArgumentException("factura de compra inválida");
+        if (!payValidator.validateBill(pay.getBill())) {
+            throw new InvalidPayDataException("factura de compra inválida");
         }
-        if (!PayValidator.validateAmountPaid(pay.getAmountPaid())) {
-            throw new IllegalArgumentException("Monto pagado invalido");
+        if (!payValidator.validateAmountPaid(pay.getAmountPaid())) {
+            throw new InvalidPayDataException("Monto pagado invalido");
         }
-        if (!PayValidator.validatePaymentMethod(pay.getPaymentMethod())) {
-            throw new IllegalArgumentException("El metodo de pago no es valido");
+        if (!payValidator.validatePaymentMethod(pay.getPaymentMethod())) {
+            throw new InvalidPayDataException("El metodo de pago no es valido");
         }
     }
 }

@@ -4,7 +4,7 @@ import com.goldeneggs.OrderEgg.OrderEgg;
 import com.goldeneggs.User.User;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 
 /**

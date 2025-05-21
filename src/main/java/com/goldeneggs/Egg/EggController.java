@@ -33,8 +33,6 @@ public class EggController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidEggDataException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -103,7 +101,7 @@ public class EggController {
      *
      * @return A {@code ResponseEntity} containing the total number of eggs as a {@code Long}.
      */
-    @GetMapping("/totalQuantity")
+        @GetMapping("/totalQuantity")
     public ResponseEntity<Long> getTotalEggQuantity() {
         Long total = eggService.getTotalEggQuantity();
         return ResponseEntity.ok(total);

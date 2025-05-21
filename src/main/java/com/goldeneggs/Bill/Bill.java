@@ -5,7 +5,7 @@ import com.goldeneggs.Order.Order;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Date;
+import java.sql.Date;
 
 /**
  * Represents a bill issued for an order.

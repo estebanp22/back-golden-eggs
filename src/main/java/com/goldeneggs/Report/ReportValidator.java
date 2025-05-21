@@ -1,7 +1,6 @@
 package com.goldeneggs.Report;
 
-
-import java.time.LocalDate;
+import java.sql.Date;
 import java.util.List;
 
 public class ReportValidator {
@@ -10,7 +9,7 @@ public class ReportValidator {
 
     public static boolean validateType(String type) {return type != null && VALID_TYPES.contains(type.toUpperCase());}
 
-    public static boolean validateDate(LocalDate dateReport) {return dateReport != null;}
+    public static boolean validateDate(Date dateReport) {return dateReport != null;}
 
     public static boolean validateContent(String content) {return content != null && content.length() >= 10;}
 
