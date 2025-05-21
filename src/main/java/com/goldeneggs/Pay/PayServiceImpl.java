@@ -1,7 +1,10 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Bill.BillRepository;
+import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +27,10 @@ public class PayServiceImpl implements PayService {
     private PayRepository payRepository;
 
     @Autowired
-    private PayValidator payValidator;
+    private UserRepository userRepository;
+
+    @Autowired
+    private BillRepository  billRepository;
 
     /**
      * {@inheritDoc}
@@ -110,17 +116,23 @@ public class PayServiceImpl implements PayService {
     }
 
     private void validatePayOrThrow(Pay pay) {
-        if (!payValidator.validateUser(pay.getUser())) {
-            throw new InvalidPayDataException("Usuario no válido");
+        if (!PayValidator.validateUser(pay.getUser())) {
+            throw new InvalidPayDataException("Invalid user");
         }
-        if (!payValidator.validateBill(pay.getBill())) {
-            throw new InvalidPayDataException("factura de compra inválida");
+        if(!userRepository.existsById(pay.getUser().getId())){
+            throw new InvalidPayDataException("User does not exist");
         }
-        if (!payValidator.validateAmountPaid(pay.getAmountPaid())) {
-            throw new InvalidPayDataException("Monto pagado invalido");
+        if (!PayValidator.validateBill(pay.getBill())) {
+            throw new InvalidPayDataException("Invalid bill");
         }
-        if (!payValidator.validatePaymentMethod(pay.getPaymentMethod())) {
-            throw new InvalidPayDataException("El metodo de pago no es valido");
+        if(!billRepository.existsById(pay.getBill().getId())){
+            throw new InvalidPayDataException("User does not exist");
+        }
+        if (!PayValidator.validateAmountPaid(pay.getAmountPaid())) {
+            throw new InvalidPayDataException("Invalid amount");
+        }
+        if (!PayValidator.validatePaymentMethod(pay.getPaymentMethod())) {
+            throw new InvalidPayDataException("Invalid payment method");
         }
     }
 }

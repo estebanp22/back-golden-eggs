@@ -110,7 +110,7 @@ public class BillControllerTest {
         OrderEgg orderEgg = OrderEgg.builder()
                 .id(1L)
                 .egg(egg)
-                .quiantity(10)
+                .quantity(10)
                 .unitPrice(12000.0)
                 .subtotal(120000.0)
                 .build();
@@ -119,7 +119,7 @@ public class BillControllerTest {
         OrderEgg orderEgg2 = OrderEgg.builder()
                 .id(2L)
                 .egg(egg)
-                .quiantity(5)
+                .quantity(5)
                 .unitPrice(12000.0)
                 .subtotal(60000.0)
                 .build();

@@ -1,11 +1,14 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Bill.BillRepository;
 import com.goldeneggs.Dto.RegisterDto;
+import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Role.Role;
 import com.goldeneggs.User.User;
 import com.goldeneggs.Bill.Bill;
+import com.goldeneggs.User.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +29,10 @@ class PayServiceImplTest {
     private PayRepository payRepository;
 
     @Mock
-    private PayValidator payValidator;
+    private UserRepository userRepository;
+
+    @Mock
+    private BillRepository billRepository;
 
     private Pay samplePay;
     private User user;
@@ -68,11 +74,6 @@ class PayServiceImplTest {
         samplePay.setAmountPaid(100.0);
         samplePay.setPaymentMethod("EFECTIVO");
 
-        // Mock de validaciones correctas
-        lenient().when(payValidator.validateUser(any(User.class))).thenReturn(true);
-        lenient().when(payValidator.validateBill(any(Bill.class))).thenReturn(true);
-        lenient().when(payValidator.validateAmountPaid(anyDouble())).thenReturn(true);
-        lenient().when(payValidator.validatePaymentMethod(anyString())).thenReturn(true);
     }
 
     @Test
@@ -105,11 +106,23 @@ class PayServiceImplTest {
 
     @Test
     void testSave_ValidData() {
-        when(payRepository.save(any(Pay.class))).thenReturn(samplePay);
-        Pay result = payService.save(samplePay);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            // Configurar validaciones
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validatePaymentMethod(samplePay.getPaymentMethod())).thenReturn(true);
 
-        assertNotNull(result);
-        verify(payRepository).save(samplePay);
+            // Configurar repositorios
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
+            when(billRepository.existsById(samplePay.getBill().getId())).thenReturn(true);
+            when(payRepository.save(any(Pay.class))).thenReturn(samplePay);
+
+            Pay result = payService.save(samplePay);
+
+            assertNotNull(result);
+            verify(payRepository).save(samplePay);
+        }
     }
 
     @Test
@@ -120,13 +133,24 @@ class PayServiceImplTest {
         updated.setAmountPaid(200.0);
         updated.setPaymentMethod("TARJETA");
 
-        when(payRepository.findById(1L)).thenReturn(Optional.of(samplePay));
-        when(payRepository.save(any(Pay.class))).thenReturn(samplePay);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            // Configurar validaciones
+            mockedValidator.when(() -> PayValidator.validateUser(updated.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(updated.getBill())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateAmountPaid(updated.getAmountPaid())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validatePaymentMethod(updated.getPaymentMethod())).thenReturn(true);
 
-        Pay result = payService.update(1L, updated);
+            // Configurar repositorios
+            when(payRepository.findById(1L)).thenReturn(Optional.of(samplePay));
+            when(userRepository.existsById(updated.getUser().getId())).thenReturn(true);
+            when(billRepository.existsById(updated.getBill().getId())).thenReturn(true);
+            when(payRepository.save(any(Pay.class))).thenReturn(updated);
 
-        assertEquals(200.0, result.getAmountPaid());
-        verify(payRepository).save(samplePay);
+            Pay result = payService.update(1L, updated);
+
+            assertEquals(200.0, result.getAmountPaid());
+            verify(payRepository).save(any(Pay.class));
+        }
     }
 
     @Test
@@ -191,39 +215,94 @@ class PayServiceImplTest {
 
     @Test
     void testSavePay_InvalidUser_ShouldThrow() {
-        when(payValidator.validateUser(samplePay.getUser())).thenReturn(false);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(false);
 
-        InvalidPayDataException exception = assertThrows(InvalidPayDataException.class, () -> payService.save(samplePay));
-        assertEquals("Usuario no válido", exception.getMessage());
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("Invalid user", exception.getMessage());
+        }
+    }
+
+    @Test
+    void testSavePay_UserDoesNotExist_ShouldThrow() {
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(false);
+
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("User does not exist", exception.getMessage());
+        }
     }
 
     @Test
     void testSavePay_InvalidBill_ShouldThrow() {
-        when(payValidator.validateUser(samplePay.getUser())).thenReturn(true);
-        when(payValidator.validateBill(samplePay.getBill())).thenReturn(false);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(false);
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
 
-        InvalidPayDataException exception = assertThrows(InvalidPayDataException.class, () -> payService.save(samplePay));
-        assertEquals("factura de compra inválida", exception.getMessage());
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("Invalid bill", exception.getMessage());
+        }
+    }
+
+    @Test
+    void testSavePay_BillDoesNotExist_ShouldThrow() {
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(true);
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
+            when(billRepository.existsById(samplePay.getBill().getId())).thenReturn(false);
+
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("User does not exist", exception.getMessage()); // <- ¿querés cambiar este mensaje?
+        }
     }
 
     @Test
     void testSavePay_InvalidAmountPaid_ShouldThrow() {
-        when(payValidator.validateUser(samplePay.getUser())).thenReturn(true);
-        when(payValidator.validateBill(samplePay.getBill())).thenReturn(true);
-        when(payValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(false);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(false);
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
+            when(billRepository.existsById(samplePay.getBill().getId())).thenReturn(true);
 
-        InvalidPayDataException exception = assertThrows(InvalidPayDataException.class, () -> payService.save(samplePay));
-        assertEquals("Monto pagado invalido", exception.getMessage());
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("Invalid amount", exception.getMessage());
+        }
     }
 
     @Test
     void testSavePay_InvalidPaymentMethod_ShouldThrow() {
-        when(payValidator.validateUser(samplePay.getUser())).thenReturn(true);
-        when(payValidator.validateBill(samplePay.getBill())).thenReturn(true);
-        when(payValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(true);
-        when(payValidator.validatePaymentMethod(samplePay.getPaymentMethod())).thenReturn(false);
+        try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
+            mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(true);
+            mockedValidator.when(() -> PayValidator.validatePaymentMethod(samplePay.getPaymentMethod())).thenReturn(false);
+            when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
+            when(billRepository.existsById(samplePay.getBill().getId())).thenReturn(true);
 
-        InvalidPayDataException exception = assertThrows(InvalidPayDataException.class, () -> payService.save(samplePay));
-        assertEquals("El metodo de pago no es valido", exception.getMessage());
+            InvalidPayDataException exception = assertThrows(
+                    InvalidPayDataException.class,
+                    () -> payService.save(samplePay)
+            );
+            assertEquals("Invalid payment method", exception.getMessage());
+        }
     }
 }

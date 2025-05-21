@@ -2,6 +2,7 @@ package com.goldeneggs.InventoryMovement;
 
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Egg.EggRepository;
 import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;
@@ -10,11 +11,13 @@ import com.goldeneggs.Role.Role;
 import com.goldeneggs.Supplier.Supplier;
 import com.goldeneggs.TypeEgg.TypeEgg;
 import com.goldeneggs.User.User;
+import com.goldeneggs.User.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,7 +40,10 @@ public class InventoryMovementServiceImplTest {
     private InventoryMovementRepository movementRepository;
 
     @Mock
-    private InventoryMovementValidator movementValidator;
+    private EggRepository eggRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     private InventoryMovement movement;
     private User user;
@@ -105,7 +111,7 @@ public class InventoryMovementServiceImplTest {
         OrderEgg orderEgg = OrderEgg.builder()
                 .id(1L)
                 .egg(egg)
-                .quiantity(10)
+                .quantity(10)
                 .unitPrice(12000.0)
                 .subtotal(120000.0)
                 .build();
@@ -114,7 +120,7 @@ public class InventoryMovementServiceImplTest {
         OrderEgg orderEgg2 = OrderEgg.builder()
                 .id(2L)
                 .egg(egg)
-                .quiantity(5)
+                .quantity(5)
                 .unitPrice(12000.0)
                 .subtotal(60000.0)
                 .build();
@@ -183,28 +189,50 @@ public class InventoryMovementServiceImplTest {
     }
 
     @Test
-    void testUpdateMovement_Success(){
+    void testUpdateMovement_Success() {
+        Long movementId = 1L;
+        InventoryMovement existingMovement = new InventoryMovement();
+        existingMovement.setId(movementId);
+        existingMovement.setCombs(50); // Valor original
+        existingMovement.setUser(new User());
+        existingMovement.setEgg(new Egg());
+        existingMovement.setMovementDate(new java.sql.Date(System.currentTimeMillis()));
+        existingMovement.setOrder(new Order());
+
         InventoryMovement updatedMovement = new InventoryMovement();
-        updatedMovement.setCombs(80);
-        updatedMovement.setUser(new User());
-        updatedMovement.setEgg(new Egg());
-        updatedMovement.setMovementDate(new java.sql.Date(System.currentTimeMillis()));
-        updatedMovement.setOrder(new Order());
+        updatedMovement.setCombs(80); // Nuevo valor
+        updatedMovement.setUser(existingMovement.getUser());
+        updatedMovement.setEgg(existingMovement.getEgg());
+        updatedMovement.setMovementDate(existingMovement.getMovementDate());
+        updatedMovement.setOrder(existingMovement.getOrder());
 
-        // Mock repo y validaciones
-        when(movementRepository.findById(1L)).thenReturn(Optional.of(movement));
-        when(movementValidator.validateMovementDate(updatedMovement.getMovementDate())).thenReturn(true);
-        when(movementValidator.validateCombs(updatedMovement.getCombs())).thenReturn(true);
-        when(movementValidator.validateEgg(updatedMovement.getEgg())).thenReturn(true);
-        when(movementValidator.validateUser(updatedMovement.getUser())).thenReturn(true);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(updatedMovement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(updatedMovement.getMovementDate())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateCombs(updatedMovement.getCombs())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateUser(updatedMovement.getUser())).thenReturn(true);
+            when(eggRepository.existsById(updatedMovement.getEgg().getId())).thenReturn(true);
+            when(userRepository.existsById(updatedMovement.getUser().getId())).thenReturn(true);
 
-        // Simular guardado
-        when(movementRepository.save(any(InventoryMovement.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(movementRepository.findById(movementId)).thenReturn(Optional.of(existingMovement));
 
-        InventoryMovement result = movementService.update(1L, updatedMovement);
+            when(movementRepository.save(any(InventoryMovement.class))).thenAnswer(invocation -> {
+                InventoryMovement saved = invocation.getArgument(0);
+                saved.setId(movementId);
+                return saved;
+            });
+            InventoryMovement result = movementService.update(movementId, updatedMovement);
 
-        assertNotNull(result);
-        assertEquals(80, result.getCombs());
+            assertNotNull(result);
+            assertEquals(movementId, result.getId());
+            assertEquals(80, result.getCombs()); // Verificar que el valor fue actualizado
+
+            verify(movementRepository).findById(movementId);
+
+            verify(movementRepository).save(argThat(mov ->
+                    mov.getId().equals(movementId) && mov.getCombs() == 80
+            ));
+        }
     }
 
     @Test
@@ -221,17 +249,21 @@ public class InventoryMovementServiceImplTest {
     @Test
     void testSaveEgg_Success(){
         // Mockeamos todas las validaciones como exitosas
-        when(movementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
-        when(movementValidator.validateCombs(movement.getCombs())).thenReturn(true);
-        when(movementValidator.validateEgg(movement.getEgg())).thenReturn(true);
-        when(movementValidator.validateUser(movement.getUser())).thenReturn(true);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateCombs(movement.getCombs())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateUser(movement.getUser())).thenReturn(true);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(true);
+            when(userRepository.existsById(movement.getUser().getId())).thenReturn(true);
 
-        when(movementRepository.save(movement)).thenReturn(movement);
+            when(movementRepository.save(movement)).thenReturn(movement);
 
-        InventoryMovement result = movementService.save(movement);
+            InventoryMovement result = movementService.save(movement);
 
-        assertNotNull(result);
-        assertEquals(movement, result);
+            assertNotNull(result);
+            assertEquals(movement, result);
+        }
     }
 
     @Test
@@ -251,39 +283,94 @@ public class InventoryMovementServiceImplTest {
 
     @Test
     void testSaveMovement_InvalidEgg_ShouldThrow() {
-        when(movementValidator.validateEgg(movement.getEgg())).thenReturn(false);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(false);
 
-        InvalidInventoryMovementDataException exception = assertThrows(InvalidInventoryMovementDataException.class, () -> movementService.save(movement));
-        assertEquals("Huevo no válido o no existente", exception.getMessage());
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("Invalid egg", exception.getMessage());
+        }
+    }
+
+    @Test
+    void testSaveMovement_EggDoesNotExist_ShouldThrow() {
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(false);
+
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("Egg does not exist", exception.getMessage());
+        }
     }
 
     @Test
     void testSaveMovement_InvalidDate_ShouldThrow() {
-        when(movementValidator.validateEgg(movement.getEgg())).thenReturn(true);
-        when(movementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(false);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(false);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(true);
 
-        InvalidInventoryMovementDataException exception = assertThrows(InvalidInventoryMovementDataException.class, () -> movementService.save(movement));
-        assertEquals("Fecha no válida", exception.getMessage());
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("Invalid date", exception.getMessage());
+        }
     }
 
     @Test
     void testSaveMovement_InvalidCombs_ShouldThrow() {
-        when(movementValidator.validateEgg(movement.getEgg())).thenReturn(true);
-        when(movementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
-        when(movementValidator.validateCombs(movement.getCombs())).thenReturn(false);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateCombs(movement.getCombs())).thenReturn(false);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(true);
 
-        InvalidInventoryMovementDataException exception = assertThrows(InvalidInventoryMovementDataException.class, () -> movementService.save(movement));
-        assertEquals("Panales requeridos inválidos", exception.getMessage());
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("Invalid combs", exception.getMessage());
+        }
     }
 
     @Test
     void testSaveMovement_InvalidUser_ShouldThrow() {
-        when(movementValidator.validateEgg(movement.getEgg())).thenReturn(true);
-        when(movementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
-        when(movementValidator.validateCombs(movement.getCombs())).thenReturn(true);
-        when(movementValidator.validateUser(movement.getUser())).thenReturn(false);
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateCombs(movement.getCombs())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateUser(movement.getUser())).thenReturn(false);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(true);
 
-        InvalidInventoryMovementDataException exception = assertThrows(InvalidInventoryMovementDataException.class, () -> movementService.save(movement));
-        assertEquals("Usuario no válido", exception.getMessage());
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("Invalid user", exception.getMessage());
+        }
+    }
+
+    @Test
+    void testSaveMovement_UserDoesNotExist_ShouldThrow() {
+        try (MockedStatic<InventoryMovementValidator> mockedValidator = mockStatic(InventoryMovementValidator.class)) {
+            mockedValidator.when(() -> InventoryMovementValidator.validateEgg(movement.getEgg())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateMovementDate(movement.getMovementDate())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateCombs(movement.getCombs())).thenReturn(true);
+            mockedValidator.when(() -> InventoryMovementValidator.validateUser(movement.getUser())).thenReturn(true);
+            when(eggRepository.existsById(movement.getEgg().getId())).thenReturn(true);
+            when(userRepository.existsById(movement.getUser().getId())).thenReturn(false);
+
+            InvalidInventoryMovementDataException exception = assertThrows(
+                    InvalidInventoryMovementDataException.class,
+                    () -> movementService.save(movement)
+            );
+            assertEquals("User does not exist", exception.getMessage());
+        }
     }
 }

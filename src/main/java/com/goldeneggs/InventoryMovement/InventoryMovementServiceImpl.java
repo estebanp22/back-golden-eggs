@@ -1,7 +1,10 @@
 package com.goldeneggs.InventoryMovement;
 
+import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Egg.EggRepository;
+import com.goldeneggs.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +21,10 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     private InventoryMovementRepository inventoryMovementRepository;
 
     @Autowired
-    private InventoryMovementValidator inventoryMovementValidator;
+    private EggRepository eggRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * {@inheritDoc}
@@ -83,17 +89,23 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     }
 
     private void validateInventoryMovementOrThrow(InventoryMovement movement) {
-        if (!inventoryMovementValidator.validateEgg(movement.getEgg())) {
-            throw new InvalidInventoryMovementDataException("Huevo no válido o no existente");
+        if (!InventoryMovementValidator.validateEgg(movement.getEgg())) {
+            throw new InvalidInventoryMovementDataException("Invalid egg");
         }
-        if (!inventoryMovementValidator.validateMovementDate(movement.getMovementDate())) {
-            throw new InvalidInventoryMovementDataException("Fecha no válida");
+        if(!eggRepository.existsById(movement.getEgg().getId())){
+            throw new InvalidInventoryMovementDataException("Egg does not exist");
         }
-        if (!inventoryMovementValidator.validateCombs(movement.getCombs())) {
-            throw new InvalidInventoryMovementDataException("Panales requeridos inválidos");
+        if (!InventoryMovementValidator.validateMovementDate(movement.getMovementDate())) {
+            throw new InvalidInventoryMovementDataException("Invalid date");
         }
-        if (!inventoryMovementValidator.validateUser(movement.getUser())) {
-            throw new InvalidInventoryMovementDataException("Usuario no válido");
+        if (!InventoryMovementValidator.validateCombs(movement.getCombs())) {
+            throw new InvalidInventoryMovementDataException("Invalid combs");
+        }
+        if (!InventoryMovementValidator.validateUser(movement.getUser())) {
+            throw new InvalidInventoryMovementDataException("Invalid user");
+        }
+        if(!userRepository.existsById(movement.getUser().getId())){
+            throw new InvalidInventoryMovementDataException("User does not exist");
         }
     }
 }

@@ -19,6 +19,7 @@ public class OrderEgg {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,12 +31,12 @@ public class OrderEgg {
     @JoinColumn(name="id_egg")
     private Egg egg;
 
-    @Column(nullable = false)
-    private int quiantity;
+    @Column(nullable = false, name="quantity")
+    private int quantity;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "unit_price")
     private double unitPrice;
 
     @Column(nullable = false)
-    private double subtotal;//quantity * unitPrice
+    private double subtotal;
 }
