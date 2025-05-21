@@ -2,6 +2,8 @@ package com.goldeneggs.Egg;
 
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Supplier.SupplierRepository;
+import com.goldeneggs.TypeEgg.TypeEggRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,10 @@ public class EggServiceImpl implements EggService {
     private EggRepository eggRepository;
 
     @Autowired
-    private EggValidator eggValidator;
+    private TypeEggRepository typeEggRepository;
+
+    @Autowired
+    private SupplierRepository supplierRepository;
 
     /**
      * Retrieves all eggs from the database.
@@ -103,26 +108,32 @@ public class EggServiceImpl implements EggService {
     }
 
     private void validateEggOrThrow(Egg egg) {
-        if (!eggValidator.validateTypeEgg(egg.getType())) {
-            throw new InvalidEggDataException("Tipo de huevo no válido o no existente");
+        if (!EggValidator.validateTypeEgg(egg.getType())) {
+            throw new InvalidEggDataException("Type egg not valid");
         }
-        if (!eggValidator.validateColor(egg.getColor())) {
-            throw new InvalidEggDataException("Color no válido");
+        if(!typeEggRepository.existsById(egg.getType().getId())){
+            throw new InvalidEggDataException("Type egg does not exist");
         }
-        if (!eggValidator.validateBuyPrice(egg.getBuyPrice())) {
-            throw new InvalidEggDataException("Precio de compra inválido");
+        if (!EggValidator.validateColor(egg.getColor())) {
+            throw new InvalidEggDataException("Color not valid");
         }
-        if (!eggValidator.validateSalePrice(egg.getBuyPrice(), egg.getSalePrice())) {
-            throw new InvalidEggDataException("Precio de venta debe ser mayor o igual al de compra");
+        if (!EggValidator.validateBuyPrice(egg.getBuyPrice())) {
+            throw new InvalidEggDataException("buy price invalid");
         }
-        if (!eggValidator.validateExpirationDate(egg.getExpirationDate())) {
-            throw new InvalidEggDataException("La fecha de expiración debe ser hoy o futura");
+        if (!EggValidator.validateSalePrice(egg.getBuyPrice(), egg.getSalePrice())) {
+            throw new InvalidEggDataException("sale price invalid");
         }
-        if (!eggValidator.validateSupplier(egg.getSupplier())) {
-            throw new InvalidEggDataException("Proveedor no válido o inexistente");
+        if (!EggValidator.validateExpirationDate(egg.getExpirationDate())) {
+            throw new InvalidEggDataException("The expiration date must be today or in the future.");
         }
-        if (!eggValidator.validateAviableQuantity(egg.getAvibleQuantity())) {
-            throw new InvalidEggDataException("Cantidad no válida");
+        if (!EggValidator.validateSupplier(egg.getSupplier())) {
+            throw new InvalidEggDataException("Supplier invalid");
+        }
+        if(!supplierRepository.existsById(egg.getSupplier().getId())){
+            throw new InvalidEggDataException("Supplier does not exist");
+        }
+        if (!EggValidator.validateAviableQuantity(egg.getAvibleQuantity())) {
+            throw new InvalidEggDataException("Aviable quantity invalid");
         }
     }
 }

@@ -7,17 +7,16 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 
-@Component
 public class PayValidator {
 
-    private final List<String> VALID_PAYMENT_METHODS = List.of("EFECTIVO", "TARJETA", "TRANSFERENCIA");
+    private static final List<String> VALID_PAYMENT_METHODS = List.of("EFECTIVO", "TARJETA", "TRANSFERENCIA");
 
-    public boolean validateUser(User user) {return user != null;}
+    public static boolean validateUser(User user) {return user != null;}
 
-    public boolean validateBill(Bill bill) {return bill != null;}
+    public static boolean validateBill(Bill bill) {return bill != null;}
 
-    public boolean validateAmountPaid(double amountPaid) {return amountPaid > 0;}
+    public static boolean validateAmountPaid(double amountPaid) {return amountPaid > 0;}
 
-    public boolean validatePaymentMethod(String paymentMethod) {return paymentMethod != null && VALID_PAYMENT_METHODS.contains(paymentMethod);}
+    public static boolean validatePaymentMethod(String paymentMethod) {return paymentMethod != null && VALID_PAYMENT_METHODS.contains(paymentMethod);}
 
 }
