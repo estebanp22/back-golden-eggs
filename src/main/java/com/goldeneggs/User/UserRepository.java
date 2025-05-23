@@ -1,5 +1,6 @@
 package com.goldeneggs.User;
 
+import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -58,5 +59,16 @@ public interface UserRepository extends JpaRepository<User,Long> {
      */
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.enabled = true")
     List<User> findAllByRoleNameAndEnabledIsTrue(@Param("roleName") String roleName);
+
+    /**
+     * To get user by id
+     *
+     * @param id id user
+     * @return User a user with id
+     */
+    default User getById(Long id) {
+        return findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    }
 
 }

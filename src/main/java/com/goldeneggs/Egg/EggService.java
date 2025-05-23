@@ -26,9 +26,10 @@ public interface EggService {
      * Persists a new egg in the system.
      *
      * @param egg The egg entity to save.
+     * @param idUser the id of the user make the save egg
      * @return The saved egg with an assigned ID.
      */
-    Egg save(Egg egg);
+    Egg save(Egg egg, Long idUser);
 
     /**
      * Updates the data of an existing egg.
@@ -37,7 +38,7 @@ public interface EggService {
      * @param updatedEgg The egg entity with updated values.
      * @return The updated egg, or null if the egg was not found.
      */
-    Egg update(Long id, Egg updatedEgg);
+    Egg update(Long id, Egg updatedEgg,  Long idUser);
 
     /**
      * Deletes an egg from the system.

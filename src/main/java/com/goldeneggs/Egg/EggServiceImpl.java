@@ -2,8 +2,12 @@ package com.goldeneggs.Egg;
 
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.InventoryMovement.InventoryMovement;
+import com.goldeneggs.InventoryMovement.InventoryMovementRepository;
+import com.goldeneggs.OrderEgg.OrderEggRepository;
 import com.goldeneggs.Supplier.SupplierRepository;
 import com.goldeneggs.TypeEgg.TypeEggRepository;
+import com.goldeneggs.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,14 @@ public class EggServiceImpl implements EggService {
 
     @Autowired
     private SupplierRepository supplierRepository;
+
+    @Autowired
+    private OrderEggRepository orderEggRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private InventoryMovementRepository inventoryMovementRepository;
 
     /**
      * Retrieves all eggs from the database.
@@ -50,12 +62,24 @@ public class EggServiceImpl implements EggService {
      * Saves a new egg to the database.
      *
      * @param egg The egg to save.
+     * @param idUser the user save the eggs
      * @return The saved egg entity.
      */
     @Override
-    public Egg save(Egg egg) {
+    public Egg save(Egg egg, Long idUser) {
         validateEggOrThrow(egg);
-        return eggRepository.save(egg);
+        Egg savedEgg = eggRepository.save(egg);
+
+        InventoryMovement movement = InventoryMovement.builder()
+                .movementDate(new java.sql.Date(System.currentTimeMillis()))
+                .combs(egg.getAvibleQuantity()/30)
+                .egg(egg)
+                .order(null)
+                .user(userRepository.getById(idUser))
+                .build();
+
+        inventoryMovementRepository.save(movement);
+        return savedEgg;
     }
 
     /**
@@ -66,19 +90,29 @@ public class EggServiceImpl implements EggService {
      * @return The updated egg if found, otherwise null.
      */
     @Override
-    public Egg update(Long id, Egg updatedEgg) {
+    public Egg update(Long id, Egg updatedEgg, Long idUser) {
         Egg existing = eggRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Egg with ID " + id + " not found"));
 
         validateEggOrThrow(updatedEgg);
+        InventoryMovement lastMovement = inventoryMovementRepository.findTopByEggOrderByMovementDateDesc(existing)
+                .orElseThrow(() -> new ResourceNotFoundException("No inventory movement found for egg"));
 
+        int newCombs = updatedEgg.getAvibleQuantity() / 30;
         existing.setType(updatedEgg.getType());
         existing.setColor(updatedEgg.getColor());
         existing.setExpirationDate(updatedEgg.getExpirationDate());
         existing.setBuyPrice(updatedEgg.getBuyPrice());
         existing.setSalePrice(updatedEgg.getSalePrice());
+        existing.setAvibleQuantity(updatedEgg.getAvibleQuantity());
 
-        return eggRepository.save(existing);
+        Egg updated = eggRepository.save(existing);
+
+        lastMovement.setCombs(newCombs);
+        lastMovement.setMovementDate(new java.sql.Date(System.currentTimeMillis()));
+        inventoryMovementRepository.save(lastMovement);
+
+        return updated;
     }
 
 
@@ -89,9 +123,14 @@ public class EggServiceImpl implements EggService {
      */
     @Override
     public void delete(Long id) {
-        if(!eggRepository.existsById(id)) {
+        if (!eggRepository.existsById(id)) {
             throw new ResourceNotFoundException("Egg with ID " + id + " not found");
         }
+
+        if (orderEggRepository.existsByEgg_Id(id)) {
+            throw new InvalidEggDataException("Cannot delete egg with ID " + id + " because it is associated with an order");
+        }
+
         eggRepository.deleteById(id);
     }
 
@@ -124,7 +163,7 @@ public class EggServiceImpl implements EggService {
             throw new InvalidEggDataException("sale price invalid");
         }
         if (!EggValidator.validateExpirationDate(egg.getExpirationDate())) {
-            throw new InvalidEggDataException("The expiration date must be today or in the future.");
+            throw new InvalidEggDataException("The expiration date must be in the future.");
         }
         if (!EggValidator.validateSupplier(egg.getSupplier())) {
             throw new InvalidEggDataException("Supplier invalid");
