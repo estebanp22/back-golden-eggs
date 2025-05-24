@@ -197,7 +197,7 @@ class UserControllerTest {
 
         when(userService.updatePassword(1L, "newpass123")).thenReturn(user);
 
-        mockMvc.perform(patch("/api/v1/users/updatepass/1/password")
+        mockMvc.perform(patch("/api/v1/users/updatepass/password/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
@@ -212,7 +212,7 @@ class UserControllerTest {
         when(userService.updatePassword(1L, "newpass123"))
                 .thenThrow(new ResourceNotFoundException("User not found"));
 
-        mockMvc.perform(patch("/api/v1/users/updatepass/1/password")
+        mockMvc.perform(patch("/api/v1/users/updatepass/password/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isNotFound())
@@ -286,7 +286,7 @@ class UserControllerTest {
         when(userService.updatePassword(eq(userId), eq(newPassword)))
                 .thenThrow(new IllegalArgumentException("New password must not be null or blank."));
 
-        mockMvc.perform(patch("/api/v1/users/updatepass/1/password")
+        mockMvc.perform(patch("/api/v1/users/updatepass/password/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isBadRequest())

@@ -128,7 +128,7 @@ public class UserController {
      *         a not-found message if the user does not exist,
      *         or an internal server error message in case of unexpected errors
      */
-    @PatchMapping("/updatepass/{id}/password")
+    @PatchMapping("/updatepass/password/{id}")
     public ResponseEntity<?> updatePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         try {
             String newPassword = body.get("newPassword");
