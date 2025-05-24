@@ -50,7 +50,6 @@ public class UserValidator {
         if (dto.getPhoneNumber() != null) validatePhoneNumber(dto.getPhoneNumber());
         if (dto.getEmail() != null) validateEmail(dto.getEmail());
         if (dto.getUsername() != null) validateUsername(dto.getUsername());
-        if (dto.getPassword() != null) validatePassword(dto.getPassword());
         if (dto.getAddress() != null) validateAddress(dto.getAddress());
     }
 

@@ -210,9 +210,11 @@ public class UserServiceImpl implements UserService {
             user.setPhoneNumber(updateUserDto.getPhoneNumber());
         }
 
+        /*
         if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
         }
+        */
 
         if (updateUserDto.getAddress() != null && !updateUserDto.getAddress().isBlank()) {
             user.setAddress(updateUserDto.getAddress());
@@ -332,4 +334,15 @@ public class UserServiceImpl implements UserService {
         return userRepository.countUsersByRoleName("Employee");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<User> getAllEmployee(){return userRepository.findAllByRoleNameAndEnabledIsTrue("EMPLOYEE");}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<User> getAllDisabledEmployess(){return userRepository.findAllByRoleNameAndDisabledIsTrue("EMPLOYEE");}
 }

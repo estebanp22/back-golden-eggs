@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,9 +39,9 @@ public class UserController {
             User savedUser = userService.save(registerDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
         } catch (UserAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.CONFLICT);
         } catch (IllegalArgumentException | InvalidUserDataException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -109,9 +110,9 @@ public class UserController {
             User updatedUser = userService.updateUser(id, updateUserDto);
             return ResponseEntity.ok(updatedUser);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (UserAlreadyExistsException | IllegalArgumentException | InvalidUserDataException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -134,9 +135,9 @@ public class UserController {
             User user = userService.updatePassword(id, newPassword);
             return ResponseEntity.ok(user);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -155,7 +156,7 @@ public class UserController {
             User user = userService.disableUser(id);
             return ResponseEntity.ok(user);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -174,7 +175,7 @@ public class UserController {
             User user = userService.activateUser(id);
             return ResponseEntity.ok(user);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -193,7 +194,7 @@ public class UserController {
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -231,5 +232,44 @@ public class UserController {
         return ResponseEntity.ok(customers);
     }
 
+    /**
+     * Retrieves all users with the role CUSTOMER.
+     *
+     * @return list of customers
+     */
+    @GetMapping("/getAllEmployee")
+    public ResponseEntity<List<User>> getAllEmployee() {
+        List<User> customers = userService.getAllEmployee();
+        if (customers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(customers);
+    }
+
+    /**
+     * Retrieves all users with the role  and disabled.
+     *
+     * @return list of customers disabled
+     */
+    @GetMapping("/getAllEmployeeDisabled")
+    public ResponseEntity<List<User>> getAllEmployeeDisabled() {
+        List<User> customers = userService.getAllDisabledEmployess();
+        if (customers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(customers);
+    }
+
+    /**
+     * This method help to send a message error
+     * @param message message of the error
+     * @param status the status of the error
+     * @return responseEntity
+     */
+    private ResponseEntity<Map<String, String>> buildErrorResponse(String message, HttpStatus status) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", message);
+        return ResponseEntity.status(status).body(error);
+    }
 }
 
