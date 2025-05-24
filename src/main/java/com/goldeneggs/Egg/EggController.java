@@ -1,5 +1,6 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Dto.Egg.EggSummaryDto;
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +64,16 @@ public class EggController {
     @GetMapping("/getAll")
     public ResponseEntity<List<Egg>> getAll() {
         return ResponseEntity.ok(eggService.getAll());
+    }
+
+    /**
+     * Gets all eggs.
+     *
+     * @return List of eggs.
+     */
+    @GetMapping("/getAllEggDto")
+    public ResponseEntity<List<EggSummaryDto>> getAllEggDto() {
+        return ResponseEntity.ok(eggService.findEggSummaries());
     }
 
     /**

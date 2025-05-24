@@ -1,5 +1,7 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Dto.Egg.EggSummaryDto;
+
 import java.util.List;
 
 /**
@@ -52,5 +54,12 @@ public interface EggService {
      *
      * @return The total number of eggs as a {@code Long}, or {@code null} if no records are present.
      */
-    public Long getTotalEggQuantity();
+    Long getTotalEggQuantity();
+
+    /**
+     * Retrives all tpye eggs with the max price and latest expiration date
+     * @return A list of eggSummary
+     */
+    List<EggSummaryDto> findEggSummaries();
+
 }

@@ -1,5 +1,6 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Dto.Egg.EggSummaryDto;
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.InventoryMovement.InventoryMovement;
@@ -144,6 +145,11 @@ public class EggServiceImpl implements EggService {
         System.out.println(eggRepository.getTotalEggQuantity());
         Long total = eggRepository.getTotalEggQuantity();
         return total != null ? total : 0;
+    }
+
+    @Override
+    public List<EggSummaryDto> findEggSummaries() {
+        return eggRepository.findEggSummaries();
     }
 
     private void validateEggOrThrow(Egg egg) {

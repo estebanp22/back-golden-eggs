@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 // === ENDPOINTS PÚBLICOS ===
                                 .requestMatchers("/api/v1/visits").permitAll()
                                 .requestMatchers("/api/v1/eggs/getAll").permitAll()
+                                .requestMatchers("/api/v1/eggs/getAllEggDto").permitAll()
                                 .requestMatchers("api/v1/users/register").permitAll()
 
                                 // === ENDPOINTS PROTEGIDOS ===
@@ -86,7 +87,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost/", "http://localhost:8080", "http://localhost:80", "http://localhost"));
+        config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost/", "http://localhost:8080", "http://localhost:80", "http://localhost", "http://localhost:6010"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
