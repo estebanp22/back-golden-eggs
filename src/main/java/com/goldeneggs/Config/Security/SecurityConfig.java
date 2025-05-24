@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 // === ENDPOINTS PÚBLICOS ===
                                 .requestMatchers("/api/v1/visits").permitAll()
                                 .requestMatchers("/api/v1/eggs/getAll").permitAll()
+                                .requestMatchers("api/v1/users/register").permitAll()
 
                                 // === ENDPOINTS PROTEGIDOS ===
                                 .requestMatchers("/api/v1/visits/count").hasAuthority("ADMIN")
@@ -72,7 +73,6 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/users/updatepass/password/**").authenticated()
                                 .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
 
-                                // === TODO LO DEMÁS: REQUIERE AUTENTICACIÓN ===
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());

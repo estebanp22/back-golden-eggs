@@ -164,7 +164,6 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
-
     /**
      * Updates an existing user with the provided details.
      *
@@ -189,6 +188,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
+        if (updateUserDto.getName() != null && !updateUserDto.getName().isBlank()) {
+            user.setName(updateUserDto.getName());
+        }
+
         if (updateUserDto.getUsername() != null && !user.getUsername().equals(updateUserDto.getUsername())) {
             if (userRepository.existsByUsername(updateUserDto.getUsername())) {
                 throw new UserAlreadyExistsException("Username '" + updateUserDto.getUsername() + "' already exists");
@@ -209,12 +212,6 @@ public class UserServiceImpl implements UserService {
             }
             user.setPhoneNumber(updateUserDto.getPhoneNumber());
         }
-
-        /*
-        if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(updateUserDto.getPassword()));
-        }
-        */
 
         if (updateUserDto.getAddress() != null && !updateUserDto.getAddress().isBlank()) {
             user.setAddress(updateUserDto.getAddress());
