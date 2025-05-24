@@ -70,5 +70,12 @@ public interface UserRepository extends JpaRepository<User,Long> {
         return findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
-
+    /**
+     * Retrieves a list of users that are associated with a specific role name and are disabled.
+     *
+     * @param roleName The name of the role to filter the users by. Must not be null or empty.
+     * @return A list of User objects that have the specified role name and are enabled.
+     */
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.enabled = false")
+    List<User> findAllByRoleNameAndDisabledIsTrue(@Param("roleName") String roleName);
 }

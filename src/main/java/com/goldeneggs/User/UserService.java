@@ -104,4 +104,18 @@ public interface UserService {
      * @return the total number of employees as a Long value.
      */
     Long countEmployees();
+
+    /**
+     * Retrieves a list of all employee in the system.
+     *
+     * @return A list of User objects representing all employee.
+     */
+    List<User> getAllEmployee();
+
+    /**
+     * Retrives a list of all employee disable in the system
+     *
+     * @return A list of user employee are disabled
+     */
+    List<User> getAllDisabledEmployess();
 }
