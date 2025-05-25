@@ -4,9 +4,13 @@ import com.goldeneggs.Bill.Bill;
 import com.goldeneggs.Bill.BillService;
 import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.Order.OrderItemDTO;
+import com.goldeneggs.Dto.Order.OrderRequestDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Pay.PayService;
+import com.goldeneggs.User.User;
+import com.goldeneggs.OrderEgg.OrderEgg;
+import com.goldeneggs.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,9 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private BillService billService;
@@ -80,14 +87,36 @@ public class OrderServiceImpl implements OrderService {
     /**
      * Saves a new or existing order.
      *
-     * @param order The order to save.
-     * @return The saved order. or error
+     * @param dto The order to save.
+     * @return The saved order or throws error
      */
     @Override
-    public Order saveOrder(Order order){
-        validateOrderOrThrow(order);
+    public Order saveOrder(OrderRequestDTO dto) {
+        User user = userRepository.findById(dto.getIdCustomer())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<OrderEgg> orderEggs = dto.getCartItem().stream().map(item -> {
+            OrderEgg oe = new OrderEgg();
+            oe.setType(item.getName());
+            oe.setColor(item.getColor());
+            oe.setQuantity(item.getQuantity());
+            oe.setUnitPrice(item.getPrice());
+            oe.setSubtotal(item.getQuantity() * item.getPrice());
+            return oe;
+        }).collect(Collectors.toList());
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderEggs(orderEggs);
+        order.setTotalPrice(dto.getTotalPrice());
+        order.setOrderDate(dto.getOrderDate());
+        order.setState(dto.getState());
+
+        orderEggs.forEach(oe -> oe.setOrder(order)); // establecer relación inversa
+
         return orderRepository.save(order);
     }
+
 
     @Override
     public Order updateOrder(Long id, Order order) {
@@ -185,7 +214,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getOrderDate().toString(),
                 order.getOrderEggs().stream().map(orderEgg ->
                         new OrderItemDTO(
-                                orderEgg.getEgg().getType().getType(),
+                                orderEgg.getType(),
                                 orderEgg.getQuantity(),
                                 orderEgg.getUnitPrice()
                         )).collect(Collectors.toList())

@@ -53,7 +53,8 @@ public class OrderEggServiceImpl implements  OrderEggService {
 
         validateOrderEggOrThrow(updatedOrderEgg);
         existing.setOrder(updatedOrderEgg.getOrder());
-        existing.setEgg(updatedOrderEgg.getEgg());
+        existing.setType(updatedOrderEgg.getType());
+        existing.setColor(updatedOrderEgg.getColor());
         existing.setQuantity(updatedOrderEgg.getQuantity());
         existing.setUnitPrice(updatedOrderEgg.getUnitPrice());
         existing.setSubtotal(updatedOrderEgg.getSubtotal());
@@ -84,9 +85,6 @@ public class OrderEggServiceImpl implements  OrderEggService {
         }
         if (!OrderEggValidator.validateOrder(orderEgg.getOrder())) {
             throw new InvalidOrderEggDataException("Invalid order");
-        }
-        if (!OrderEggValidator.validateEgg(orderEgg.getEgg())) {
-            throw new InvalidOrderEggDataException("Invalid egg");
         }
     }
 }

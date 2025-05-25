@@ -3,6 +3,7 @@ package com.goldeneggs.Order;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.Order.OrderItemDTO;
+import com.goldeneggs.Dto.Order.OrderRequestDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.User.User;
@@ -97,7 +98,7 @@ public class OrderControllerTest {
 
     @Test
     void testSaveOrder_Valid() throws Exception {
-        when(orderService.saveOrder(any(Order.class))).thenReturn(order);
+        when(orderService.saveOrder(any(OrderRequestDTO.class))).thenReturn(order);
 
         mockMvc.perform(post("/api/v1/orders/save")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +109,7 @@ public class OrderControllerTest {
 
     @Test
     void testSaveOrder_Invalid() throws Exception {
-        when(orderService.saveOrder(any(Order.class)))
+        when(orderService.saveOrder(any(OrderRequestDTO.class)))
                 .thenThrow(new InvalidOrderDataException("Invalid order"));
 
         mockMvc.perform(post("/api/v1/orders/save")
