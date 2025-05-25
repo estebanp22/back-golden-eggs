@@ -27,9 +27,11 @@ public class OrderEgg {
     @JsonIgnore
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="id_egg")
-    private Egg egg;
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "color")
+    private String color;
 
     @Column(nullable = false, name="quantity")
     private int quantity;

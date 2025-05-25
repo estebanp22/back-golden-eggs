@@ -104,7 +104,8 @@ public class OrderServiceImplTest {
         //Create egg of order
         orderEgg = OrderEgg.builder()
                 .id(1L)
-                .egg(egg)
+                .type("AA")
+                .color("Blanco")
                 .quantity(10)
                 .unitPrice(12000.0)
                 .subtotal(120000.0)
@@ -113,7 +114,8 @@ public class OrderServiceImplTest {
         //Create egg of order
         orderEgg2 = OrderEgg.builder()
                 .id(2L)
-                .egg(egg)
+                .type("AA")
+                .color("Blanco")
                 .quantity(5)
                 .unitPrice(12000.0)
                 .subtotal(60000.0)

@@ -39,7 +39,8 @@ class OrderEggServiceImplTest {
         sampleOrderEgg.setUnitPrice(10.0);
         sampleOrderEgg.setSubtotal(50.0);
         sampleOrderEgg.setOrder(new Order());
-        sampleOrderEgg.setEgg(new Egg());
+        sampleOrderEgg.setType("AA");
+        sampleOrderEgg.setColor("Blanco");
 
         // Configurar un OrderEgg inválido para pruebas
         invalidOrderEgg = new OrderEgg();
@@ -95,7 +96,6 @@ class OrderEggServiceImplTest {
                     sampleOrderEgg.getUnitPrice()
             )).thenReturn(true);
             mockedValidator.when(() -> OrderEggValidator.validateOrder(sampleOrderEgg.getOrder())).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateEgg(sampleOrderEgg.getEgg())).thenReturn(true);
 
             // Configurar repositorio
             when(orderEggRepository.save(sampleOrderEgg)).thenReturn(sampleOrderEgg);
@@ -184,29 +184,6 @@ class OrderEggServiceImplTest {
     }
 
     @Test
-    void testSave_InvalidEgg() {
-        try (MockedStatic<OrderEggValidator> mockedValidator = mockStatic(OrderEggValidator.class)) {
-            // Configurar validaciones
-            mockedValidator.when(() -> OrderEggValidator.validateQuantity(sampleOrderEgg.getQuantity())).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateUnitPrice(sampleOrderEgg.getUnitPrice())).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateSubtotal(
-                    sampleOrderEgg.getSubtotal(),
-                    sampleOrderEgg.getQuantity(),
-                    sampleOrderEgg.getUnitPrice()
-            )).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateOrder(sampleOrderEgg.getOrder())).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateEgg(sampleOrderEgg.getEgg())).thenReturn(false);
-
-            // Ejecutar y Verificar
-            InvalidOrderEggDataException exception = assertThrows(
-                    InvalidOrderEggDataException.class,
-                    () -> orderEggService.save(sampleOrderEgg)
-            );
-            assertEquals("Invalid egg", exception.getMessage());
-        }
-    }
-
-    @Test
     void testUpdate_Existing() {
         try (MockedStatic<OrderEggValidator> mockedValidator = mockStatic(OrderEggValidator.class)) {
             // Configurar datos
@@ -215,7 +192,8 @@ class OrderEggServiceImplTest {
             updatedOrderEgg.setUnitPrice(15.0);
             updatedOrderEgg.setSubtotal(150.0);
             updatedOrderEgg.setOrder(new Order());
-            updatedOrderEgg.setEgg(new Egg());
+            updatedOrderEgg.setType("AAA");
+            updatedOrderEgg.setColor("Blanco");
 
             // Configurar validaciones
             mockedValidator.when(() -> OrderEggValidator.validateQuantity(updatedOrderEgg.getQuantity())).thenReturn(true);
@@ -226,7 +204,6 @@ class OrderEggServiceImplTest {
                     updatedOrderEgg.getUnitPrice()
             )).thenReturn(true);
             mockedValidator.when(() -> OrderEggValidator.validateOrder(updatedOrderEgg.getOrder())).thenReturn(true);
-            mockedValidator.when(() -> OrderEggValidator.validateEgg(updatedOrderEgg.getEgg())).thenReturn(true);
 
             // Configurar repositorio
             when(orderEggRepository.findById(1L)).thenReturn(Optional.of(sampleOrderEgg));

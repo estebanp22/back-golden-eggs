@@ -110,8 +110,8 @@ public class StatisticsService {
         Map<String, Long> productSales = incomeOrders.stream()
                 .filter(o -> o != null && o.getOrderEggs() != null)
                 .flatMap(order -> order.getOrderEggs().stream())
-                .filter(egg -> egg != null && egg.getEgg().getType() != null)
-                .map(egg -> egg.getEgg().getType().getType() + " - " + egg.getEgg().getColor())
+                .filter(egg -> egg != null && egg.getType() != null)
+                .map(egg -> egg.getType() + " - " + egg.getColor())
                 .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
 
         kpis.mostSoldProduct = productSales.entrySet().stream()

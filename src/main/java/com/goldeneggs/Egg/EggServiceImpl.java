@@ -5,6 +5,7 @@ import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.InventoryMovement.InventoryMovement;
 import com.goldeneggs.InventoryMovement.InventoryMovementRepository;
+import com.goldeneggs.Order.Order;
 import com.goldeneggs.OrderEgg.OrderEggRepository;
 import com.goldeneggs.Supplier.SupplierRepository;
 import com.goldeneggs.TypeEgg.TypeEggRepository;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service implementation for managing eggs.
@@ -128,7 +130,9 @@ public class EggServiceImpl implements EggService {
             throw new ResourceNotFoundException("Egg with ID " + id + " not found");
         }
 
-        if (orderEggRepository.existsByEgg_Id(id)) {
+        Egg egg = eggRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Egg with ID " + id + " not found"));
+        if (orderEggRepository.existsByTypeAndColorInActiveOrders(egg.getType().getType(), egg.getColor(), Order.STATE_PENDING)) {
             throw new InvalidEggDataException("Cannot delete egg with ID " + id + " because it is associated with an order");
         }
 

@@ -1,6 +1,7 @@
 package com.goldeneggs.Order;
 
 import com.goldeneggs.Dto.Order.OrderDTO;
+import com.goldeneggs.Dto.Order.OrderRequestDTO;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
 import org.hibernate.service.spi.ServiceException;
@@ -32,11 +33,11 @@ public interface OrderService {
     /**
      * Saves a new or existing order.
      *
-     * @param order The order to save.
+     * @param dto The order to save.
      * @return The saved order.
      * @throws BadRequestException If the provided order data is invalid or incomplete.
      */
-    Order saveOrder(Order order) throws BadRequestException;
+    Order saveOrder(OrderRequestDTO dto) throws BadRequestException;
 
     /**
      * Update a existing order.

@@ -1,6 +1,7 @@
 package com.goldeneggs.Order;
 
 import com.goldeneggs.Dto.Order.OrderDTO;
+import com.goldeneggs.Dto.Order.OrderRequestDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
@@ -84,9 +85,10 @@ public class OrderController {
      * @throws BadRequestException If the order data is invalid or incomplete.
      */
     @PostMapping("/save")
-    public ResponseEntity<?> saveOrder(@RequestBody Order order) throws BadRequestException {
+    public ResponseEntity<?> saveOrder(@RequestBody OrderRequestDTO order) throws BadRequestException {
         try {
             Order saved =  orderService.saveOrder(order);
+            System.out.println();
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidOrderDataException e) {
             return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
