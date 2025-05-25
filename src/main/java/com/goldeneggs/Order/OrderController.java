@@ -1,16 +1,15 @@
 package com.goldeneggs.Order;
 
-import com.goldeneggs.Egg.Egg;
-import com.goldeneggs.Exception.InvalidEggDataException;
+import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
-import org.hibernate.service.spi.ServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for managing orders.
@@ -153,4 +152,48 @@ public class OrderController {
         Long count = orderService.countOrdersInCurrentMonth();
         return ResponseEntity.ok(count);
     }
+
+
+    /**
+     * Retrieves all orders as Data Transfer Objects (DTOs).
+     *
+     * @return A ResponseEntity containing a list of OrderDTO objects representing all orders.
+     */
+    @GetMapping("/getAll/dto")
+    public ResponseEntity<List<OrderDTO>> getAllOrdersDTO() {
+        List<OrderDTO> orders = orderService.getAllAsDTO();
+        return ResponseEntity.ok(orders);
+    }
+
+    /**
+     * Cancels an existing order by setting its state to "CANCELED".
+     *
+     * @param id The ID of the order to cancel.
+     * @return ResponseEntity with HTTP status 200 if successful, or 404 if the order is not found.
+     */
+    @PatchMapping("/cancel/{id}")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
+        orderService.cancelOrder(id);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Processes an order based on the provided order ID and payment method.
+     *
+     * @param id The ID of the order to be processed.
+     * @param payload A map containing the details for processing the order, specifically the "paymentMethod" key.
+     * @return A ResponseEntity with an HTTP status of 200 (OK) if the processing is successful.
+     */
+    @PutMapping("/process/{id}")
+    public ResponseEntity<Void> processOrder(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+        String paymentMethod = payload.get("paymentMethod");
+        orderService.processOrder(id, paymentMethod);
+        return ResponseEntity.ok().build();
+    }
+
+
+
+
 }

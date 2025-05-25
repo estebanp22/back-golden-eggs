@@ -1,5 +1,6 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Bill.Bill;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
 
@@ -87,4 +88,11 @@ public interface PayService {
      */
     Double totalIncomeCurrentMonth();
 
+    /**
+     * Creates a payment for the specified bill using the provided payment method.
+     *
+     * @param bill The bill for which the payment is to be created.
+     * @param paymentMethod The method of payment (e.g., cash, card, or transfer).
+     */
+    void createPayForBill(Bill bill, String paymentMethod);
 }

@@ -1,5 +1,6 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.apache.coyote.BadRequestException;
 import org.hibernate.service.spi.ServiceException;
@@ -76,4 +77,25 @@ public interface OrderService {
      */
     Long countOrdersByCustomerId(Long customerId);
 
+    /**
+     * Retrieves all orders in the system and maps them to their corresponding Data Transfer Object (DTO) representation.
+     *
+     * @return A list of OrderDTO objects representing all orders in the system.
+     */
+    List<OrderDTO> getAllAsDTO();
+
+    /**
+     * Cancels an order identified by its ID.
+     *
+     * @param id The ID of the order to cancel.
+     */
+    void cancelOrder(Long id);
+
+    /**
+     * Processes an order based on the provided ID and payment method.
+     *
+     * @param id The unique identifier of the order to be processed.
+     * @param paymentMethod The payment method to be used for processing the order.
+     */
+    void processOrder(Long id, String paymentMethod);
 }

@@ -1,6 +1,7 @@
 package com.goldeneggs.Bill;
 
 import com.goldeneggs.Dto.BillDto;
+import com.goldeneggs.Order.Order;
 
 import java.util.List;
 
@@ -102,4 +103,11 @@ public interface BillService {
      * @return The total number of bills issued in the current month. Returns 0 if no bills are found.
      */
     Long countCustomerBillsInCurrentMonth();
+
+    /**
+     * Creates a new bill for the specified order.
+     *
+     * @param order the order for which a bill is to be created.
+     */
+    Bill createBillForOrder(Order order);
 }

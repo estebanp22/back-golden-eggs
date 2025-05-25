@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.sql.Date;
 import java.util.List;
 import java.util.Map;
@@ -287,6 +286,13 @@ public class BillServiceImpl implements BillService {
         return count != null ? count : 0L;
     }
 
+    /**
+     * Validates the provided bill object and throws an exception if any validation fails.
+     *
+     * @param bill the Bill object to be validated. It must have a valid order, issue date,
+     *             and total price, otherwise an InvalidBillDataException is thrown.
+     * @throws InvalidBillDataException if the order, issue date, or total price of the bill is invalid.
+     */
     private void validateBillOrThrow(Bill bill) {
         if (!BillValidator.validateOrder(bill.getOrder())) {
             throw new InvalidBillDataException("Order is not valid");
@@ -300,4 +306,21 @@ public class BillServiceImpl implements BillService {
             throw new  InvalidBillDataException("Total price is not valid");
         }
     }
+
+    /**
+     * Creates a bill for the provided order, sets its attributes, and saves it to the repository.
+     *
+     * @param order the order for which the bill will be created
+     */
+    @Override
+    public Bill createBillForOrder(Order order) {
+        Bill bill = new Bill();
+        bill.setOrder(order);
+        bill.setIssueDate(Date.valueOf(LocalDate.now()));
+        bill.setTotalPrice(order.getTotalPrice());
+        bill.setPaid(true);
+        return billRepository.save(bill);
+    }
+
+
 }

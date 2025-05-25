@@ -1,7 +1,7 @@
 package com.goldeneggs.Pay;
 
+import com.goldeneggs.Bill.Bill;
 import com.goldeneggs.Bill.BillRepository;
-import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.User.UserRepository;
@@ -115,6 +115,21 @@ public class PayServiceImpl implements PayService {
         return total != null ? total : 0.0;
     }
 
+    /**
+     * Validates the provided Pay object and throws an exception if any of its data is invalid.
+     * This includes checks for user validity, user existence, bill validity, bill existence,
+     * payment amount, and payment method.
+     *
+     * @param pay The Pay object to validate. It contains information about the user, bill,
+     *            payment amount, and payment method that will be validated.
+     * @throws InvalidPayDataException if the Pay object contains invalid data, such as:
+     *                                 - Invalid or null user
+     *                                 - User does not exist in the repository
+     *                                 - Invalid or null bill
+     *                                 - Bill does not exist in the repository
+     *                                 - Invalid payment amount (e.g., zero or negative)
+     *                                 - Invalid payment method
+     */
     private void validatePayOrThrow(Pay pay) {
         if (!PayValidator.validateUser(pay.getUser())) {
             throw new InvalidPayDataException("Invalid user");
@@ -134,5 +149,24 @@ public class PayServiceImpl implements PayService {
         if (!PayValidator.validatePaymentMethod(pay.getPaymentMethod())) {
             throw new InvalidPayDataException("Invalid payment method");
         }
+    }
+
+    /**
+     * Creates a payment record for the provided bill using the specified payment method.
+     * The payment is initialized with the total price of the bill and saved in the system.
+     *
+     * @param bill The bill for which the payment is being created. Must not be null and should contain
+     *             valid information including the total price.
+     * @param paymentMethod The method of payment used for the bill (e.g., cash, credit card, etc.).
+     *                       Must not be null or empty.
+     */
+    @Override
+    public void createPayForBill(Bill bill, String paymentMethod) {
+       Pay pay = new Pay();
+       pay.setBill(bill);
+       pay.setUser(bill.getOrder().getUser());
+       pay.setAmountPaid(bill.getTotalPrice());
+       pay.setPaymentMethod(paymentMethod);
+       save(pay);
     }
 }
