@@ -1,6 +1,8 @@
 package com.goldeneggs.Order;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.goldeneggs.Dto.Order.OrderDTO;
+import com.goldeneggs.Dto.Order.OrderItemDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.User.User;
@@ -203,4 +205,38 @@ public class OrderControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Invalid order data"));
     }
+
+    @Test
+    void testGetAllOrdersDTO_ReturnsList() throws Exception {
+        OrderDTO dto = OrderDTO.builder()
+                .id(1L)
+                .customerName("Juan Pérez")
+                .status("PAID")
+                .total(50000.0)
+                .date("2025-05-24")
+                .items(List.of(
+                        OrderItemDTO.builder()
+                                .productName("Huevo A")
+                                .quantity(10)
+                                .unitPrice(5000.0)
+                                .build()
+                ))
+                .build();
+
+        when(orderService.getAllAsDTO()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/orders/getAll/dto"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(dto.getId()))
+                .andExpect(jsonPath("$[0].customerName").value(dto.getCustomerName()))
+                .andExpect(jsonPath("$[0].status").value(dto.getStatus()))
+                .andExpect(jsonPath("$[0].total").value(dto.getTotal()))
+                .andExpect(jsonPath("$[0].date").value(dto.getDate()))
+                .andExpect(jsonPath("$[0].items[0].productName").value("Huevo A"))
+                .andExpect(jsonPath("$[0].items[0].quantity").value(10))
+                .andExpect(jsonPath("$[0].items[0].unitPrice").value(5000.0));
+
+        verify(orderService).getAllAsDTO();
+    }
+
 }

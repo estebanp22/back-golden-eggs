@@ -1,13 +1,20 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Bill.Bill;
+import com.goldeneggs.Bill.BillService;
+import com.goldeneggs.Dto.Order.OrderDTO;
+import com.goldeneggs.Dto.Order.OrderItemDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Pay.PayService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the OrderService interface.
@@ -20,6 +27,12 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+
+    @Autowired
+    private BillService billService;
+
+    @Autowired
+    private PayService payService;
 
     /**
      * Constructor to inject the {@link OrderRepository} dependency.
@@ -154,5 +167,63 @@ public class OrderServiceImpl implements OrderService {
         if(!OrderValidator.validateState(order.getState())){
             throw new InvalidOrderDataException("Order state is not valid.");
         }
+    }
+
+    /**
+     * Retrieves all orders and maps them to OrderDTOs.
+     *
+     * @return list of OrderDTOs
+     */
+    @Override
+    public List<OrderDTO> getAllAsDTO() {
+        return orderRepository.findAll().stream().map(order ->
+                new OrderDTO(
+                order.getId(),
+                order.getUser().getName(),
+                order.getState(),
+                order.getTotalPrice(),
+                order.getOrderDate().toString(),
+                order.getOrderEggs().stream().map(orderEgg ->
+                        new OrderItemDTO(
+                                orderEgg.getEgg().getType().getType(),
+                                orderEgg.getQuantity(),
+                                orderEgg.getUnitPrice()
+                        )).collect(Collectors.toList())
+        )).collect(Collectors.toList());
+    }
+
+    /**
+     * Cancels an order by its ID.
+     *
+     * @param id The ID of the order to cancel.
+     * @throws ResourceNotFoundException If the order with the given ID does not exist.
+     */
+    @Override
+    public void cancelOrder(Long id){
+        Order order = orderRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Order with ID " + id + " not found.")
+        );
+        order.setState(Order.STATE_CANCELED);
+        orderRepository.save(order);
+    }
+
+    /**
+     * Processes an order by creating a bill, initiating payment, and updating the order state.
+     *
+     * @param id The ID of the order to process.
+     * @param paymentMethod The payment method to use for processing the order.
+     * @throws ResourceNotFoundException If the order with the given ID does not exist.
+     */
+    @Override
+    public void processOrder(Long id, String paymentMethod){
+        Order order = orderRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Order with ID " + id + " not found.")
+        );
+
+        Bill bill = billService.createBillForOrder(order);
+        payService.createPayForBill(bill, paymentMethod);
+
+        order.setState(Order.STATE_COMPLETED);
+        orderRepository.save(order);
     }
 }

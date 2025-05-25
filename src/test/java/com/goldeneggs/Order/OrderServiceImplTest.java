@@ -1,5 +1,6 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidOrderDataException;
@@ -194,9 +195,7 @@ public class OrderServiceImplTest {
 
         Order updated = new Order();
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            orderService.updateOrder(1L, updated);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> orderService.updateOrder(1L, updated));
 
         verify(orderRepository).findById(1L);
     }
@@ -221,9 +220,7 @@ public class OrderServiceImplTest {
     void delete_ShouldThrowException_WhenOrderNotFound() {
         when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            orderService.deleteOrder(1L);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> orderService.deleteOrder(1L));
 
         verify(orderRepository, never()).deleteById(anyLong());
     }
@@ -421,5 +418,34 @@ public class OrderServiceImplTest {
         order.setTotalPrice(10000.0);
         order.setState("Confirmado");
         return order;
+    }
+
+    @Test
+    void getAllOrdersDTO_ShouldReturnMappedDTOs() {
+        Order order2 = Order.builder()
+                .id(2L)
+                .user(user)
+                .orderEggs(List.of(orderEgg, orderEgg2))
+                .totalPrice(1800000.0)
+                .orderDate(new java.sql.Date(System.currentTimeMillis()))
+                .state("RECIBIDO")
+                .build();
+
+        when(orderRepository.findAll()).thenReturn(List.of(order2, order));
+
+        List<OrderDTO> result = orderService.getAllAsDTO();
+
+        assertEquals(2, result.size());
+
+        OrderDTO dto = result.get(1);
+        assertEquals(order.getId(), dto.getId());
+        assertEquals(user.getName(), dto.getCustomerName());
+        assertEquals(order.getState(), dto.getStatus());
+        assertEquals(order.getTotalPrice(), dto.getTotal());
+        assertEquals(order.getOrderDate().toString(), dto.getDate());
+
+        assertEquals(order.getOrderEggs().size(), dto.getItems().size());
+
+        verify(orderRepository).findAll();
     }
 }

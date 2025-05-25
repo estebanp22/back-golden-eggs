@@ -19,6 +19,13 @@ import java.util.List;
 public class Order {
 
     /**
+     * Possible states of an order.
+     */
+    public static final String STATE_CANCELED = "CANCELADA";
+    public static final String STATE_PENDING = "PENDIENTE";
+    public static final String STATE_COMPLETED = "COMPLETADA";
+
+    /**
      * Unique identifier for the order.
      */
     @Id

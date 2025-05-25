@@ -57,6 +57,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/eggs/getAll").permitAll()
                                 .requestMatchers("/api/v1/eggs/getAllEggDto").permitAll()
                                 .requestMatchers("api/v1/users/register").permitAll()
+                                .requestMatchers("/api/v1/orders/save").permitAll()
 
                                 // === ENDPOINTS PROTEGIDOS ===
                                 .requestMatchers("/api/v1/visits/count").hasAuthority("ADMIN")
