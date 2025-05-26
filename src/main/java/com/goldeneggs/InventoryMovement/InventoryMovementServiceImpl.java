@@ -1,14 +1,17 @@
 package com.goldeneggs.InventoryMovement;
 
-import com.goldeneggs.Exception.InvalidEggDataException;
+import com.goldeneggs.Dto.InventoryMovement.InventoryMovementDTO;
+import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Egg.EggRepository;
+import com.goldeneggs.Order.Order;
 import com.goldeneggs.User.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the InventoryService interface.
@@ -30,8 +33,11 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
      * {@inheritDoc}
      */
     @Override
-    public List<InventoryMovement> getAll() {
-        return inventoryMovementRepository.findAll();
+    public List<InventoryMovementDTO> getAll() {
+        List<InventoryMovement> movements = inventoryMovementRepository.findAll();
+        return movements.stream()
+                .map(InventoryMovementDTO::new)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -86,6 +92,19 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
             throw new ResourceNotFoundException("Inventory movement with ID " + id + " not found.");
         }
         inventoryMovementRepository.deleteById(id);
+    }
+
+    @Override
+    public void createMovementForEgg(Egg egg, Order order, Long id){
+
+        InventoryMovement movement = new InventoryMovement();
+        movement.setMovementDate(new java.sql.Date(System.currentTimeMillis()));
+        movement.setCombs(egg.getAvibleQuantity()/30);
+        movement.setEgg(egg);
+        movement.setOrder(order);
+        movement.setUser(userRepository.findById(id).get());
+
+        inventoryMovementRepository.save(movement);
     }
 
     private void validateInventoryMovementOrThrow(InventoryMovement movement) {

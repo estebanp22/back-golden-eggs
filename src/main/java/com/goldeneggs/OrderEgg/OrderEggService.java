@@ -1,5 +1,6 @@
 package com.goldeneggs.OrderEgg;
 
+import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 
 import java.util.List;
@@ -69,4 +70,6 @@ public interface OrderEggService {
      * @throws ResourceNotFoundException If the order eggs with the given ID does not exist.
      */
     void delete(Long id);
+
+    OrderEgg createOrderEggForEgg(Egg egg);
 }

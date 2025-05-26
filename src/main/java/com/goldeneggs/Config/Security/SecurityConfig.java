@@ -49,22 +49,23 @@ public class SecurityConfig {
                                         "/webjars/**"
                                 ).permitAll()
 
-                                // === AUTH ===
+                                // AUTH
                                 .requestMatchers("/api/auth/**").permitAll()
 
-                                // === ENDPOINTS PÚBLICOS ===
+                                // ENDPOINTS PÚBLICOS
+                                .requestMatchers("/api/v1/orders/getOrdersCustomer/**").authenticated() // 👈 colócala ANTES de /orders/**
+                                .requestMatchers("/api/v1/orders/save").permitAll()
                                 .requestMatchers("/api/v1/visits").permitAll()
                                 .requestMatchers("/api/v1/eggs/getAll").permitAll()
                                 .requestMatchers("/api/v1/eggs/getAllEggDto").permitAll()
                                 .requestMatchers("api/v1/users/register").permitAll()
-                                .requestMatchers("/api/v1/orders/save").permitAll()
 
-                                // === ENDPOINTS PROTEGIDOS ===
+                                // ENDPOINTS PROTEGIDOS
+                                .requestMatchers("/api/v1/orders/**").hasAuthority("ADMIN") // 👈 esto ya no afecta a getOrdersCustomer/**
                                 .requestMatchers("/api/v1/visits/count").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/bills/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/eggs/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/inventories/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/orders/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/payments/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/reports/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/roles/**").hasAuthority("ADMIN")

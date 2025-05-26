@@ -1,5 +1,6 @@
 package com.goldeneggs.OrderEgg;
 
+import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidOrderEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,19 @@ public class OrderEggServiceImpl implements  OrderEggService {
             throw new ResourceNotFoundException("Cannot delete. order egg not found with ID: " + id);
         }
         orderEggRepository.deleteById(id);
+    }
+
+    @Override
+    public OrderEgg createOrderEggForEgg(Egg egg){
+
+        OrderEgg orderEgg = new OrderEgg();
+        orderEgg.setType(egg.getType().getType());
+        orderEgg.setColor(egg.getColor());
+        orderEgg.setQuantity(egg.getAvibleQuantity());
+        orderEgg.setUnitPrice(egg.getBuyPrice());
+        orderEgg.setSubtotal(egg.getBuyPrice() * egg.getAvibleQuantity());
+
+        return orderEggRepository.save(orderEgg);
     }
 
     private void validateOrderEggOrThrow(OrderEgg orderEgg) {

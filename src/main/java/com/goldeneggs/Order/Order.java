@@ -24,6 +24,7 @@ public class Order {
     public static final String STATE_CANCELED = "CANCELADA";
     public static final String STATE_PENDING = "PENDIENTE";
     public static final String STATE_COMPLETED = "COMPLETADA";
+    public static final String STATE_INVENTORY = "INVENTORY";
 
     /**
      * Unique identifier for the order.

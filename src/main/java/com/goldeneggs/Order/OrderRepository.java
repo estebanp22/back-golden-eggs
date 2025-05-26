@@ -52,5 +52,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :customerId")
     Long countOrdersByCustomerId(@Param("customerId") Long customerId);
 
+    /**
+     * List of all orders by customer
+     * @param id The ID of the customer whose order
+     * @return The list of orders placed by the specified customer
+     */
+    @Query("SELECT o FROM Order o WHERE o.user.id = :id")
+    List<Order> getOrdersByUserId(Long id);
+
 
 }

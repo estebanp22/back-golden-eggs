@@ -116,6 +116,24 @@ public class PayServiceImpl implements PayService {
     }
 
     /**
+     * Calculates the total income from all payments made in the last month.
+     * If no payments exist for the specified month, returns 0.0.
+     *
+     * @return The total sum of payments made in the last month as a {@code Double}, or 0.0 if no payments exist.
+     */
+
+    @Override
+    public Double totalExpensesCurrentMonth() {
+        LocalDate now = LocalDate.now();
+        Date startOfMonth = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date today = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        Double total = payRepository.sumAmountSaleInCurrentMonth(startOfMonth, today);
+
+        return total != null ? total : 0.0;
+    }
+
+    /**
      * Validates the provided Pay object and throws an exception if any of its data is invalid.
      * This includes checks for user validity, user existence, bill validity, bill existence,
      * payment amount, and payment method.
