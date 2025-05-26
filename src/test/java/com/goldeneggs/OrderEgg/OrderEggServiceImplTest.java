@@ -1,6 +1,5 @@
 package com.goldeneggs.OrderEgg;
 
-import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidOrderEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;

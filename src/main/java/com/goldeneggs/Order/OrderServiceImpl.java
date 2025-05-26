@@ -32,23 +32,28 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private BillService billService;
+    private final BillService billService;
 
-    @Autowired
-    private PayService payService;
+    private final PayService payService;
 
     /**
-     * Constructor to inject the {@link OrderRepository} dependency.
+     * Constructs an instance of the OrderServiceImpl class.
      *
-     * @param orderRepository The order repository to interact with the database.
+     * @param orderRepository The repository used to perform CRUD operations on orders.
+     * @param billService The service responsible for generating bills for orders.
+     * @param payService The service responsible for processing payments for orders.
+     * @param userRepository The repository used to manage and retrieve user data.
      */
-    public OrderServiceImpl(OrderRepository orderRepository) {
+    @Autowired
+    public OrderServiceImpl(OrderRepository orderRepository, BillService billService, PayService payService, UserRepository userRepository) {
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.billService = billService;
+        this.payService = payService;
     }
+
 
     /**
      * Retrieves all orders in the system.
@@ -180,7 +185,7 @@ public class OrderServiceImpl implements OrderService {
         return count != null ? count : 0L;
     }
 
-    private void validateOrderOrThrow(Order order) {
+    public void validateOrderOrThrow(Order order) {
         if(!OrderValidator.validateUser(order.getUser())){
             throw new InvalidOrderDataException("User is not valid.");
         }

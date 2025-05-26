@@ -168,31 +168,41 @@ public class OrderController {
     }
 
     /**
-     * Cancels an existing order by setting its state to "CANCELED".
+     * Cancels an order with the given ID.
      *
      * @param id The ID of the order to cancel.
-     * @return ResponseEntity with HTTP status 200 if successful, or 404 if the order is not found.
+     * @return A ResponseEntity with status 200 if the operation is successful,
+     *         or status 204 if the specified order is not found.
      */
     @PatchMapping("/cancel/{id}")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
-        orderService.cancelOrder(id);
-        return ResponseEntity.ok().build();
+        try {
+            orderService.cancelOrder(id);
+            return ResponseEntity.ok().build();
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
-     * Processes an order based on the provided order ID and payment method.
+     * Processes an order based on the specified order ID and payment method.
      *
-     * @param id The ID of the order to be processed.
-     * @param payload A map containing the details for processing the order, specifically the "paymentMethod" key.
-     * @return A ResponseEntity with an HTTP status of 200 (OK) if the processing is successful.
+     * @param id The ID of the order to process.
+     * @param payload A map containing the required data for processing the order, such as the "paymentMethod".
+     * @return A ResponseEntity with HTTP status 200 if the operation is successful,
+     *         or status 204 if the specified order is not found.
      */
     @PutMapping("/process/{id}")
     public ResponseEntity<Void> processOrder(
             @PathVariable Long id,
             @RequestBody Map<String, String> payload) {
-        String paymentMethod = payload.get("paymentMethod");
-        orderService.processOrder(id, paymentMethod);
-        return ResponseEntity.ok().build();
+        try {
+            String paymentMethod = payload.get("paymentMethod");
+            orderService.processOrder(id, paymentMethod);
+            return ResponseEntity.ok().build();
+        }catch (ResourceNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
     }
 
 

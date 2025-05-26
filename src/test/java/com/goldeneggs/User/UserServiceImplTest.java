@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -39,6 +41,7 @@ class UserServiceImplTest {
     @Mock private BillRepository billRepository;
     @Mock private PayRepository payRepository;
 
+    @Spy
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -176,33 +179,29 @@ class UserServiceImplTest {
     }
 
     // ----------- updateUser(Long, UpdateUserDto) ------------
-
     @Test
-    void updateUser_Success() {
-        UpdateUserDto updateDto = new UpdateUserDto();
-        updateDto.setUsername("newusername");
-        updateDto.setEmail("newemail@example.com");
-        updateDto.setPhoneNumber("7654321");
-        updateDto.setPassword("NewPass1");
-        updateDto.setAddress("New Address");
-        updateDto.setRoleId(role.getId());
+    void updateUser_updateRole_success() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setRoleId(10L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.existsByUsername(updateDto.getUsername())).thenReturn(false);
-        when(userRepository.existsByEmail(updateDto.getEmail())).thenReturn(false);
-        when(userRepository.existsByPhoneNumber(updateDto.getPhoneNumber())).thenReturn(false);
-        when(roleRepository.findById(role.getId())).thenReturn(Optional.of(role));
-        when(passwordEncoder.encode(updateDto.getPassword())).thenReturn("encodedNewPass");
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        User existingUser = new User();
+        existingUser.setId(id);
+        existingUser.setRoles(Collections.emptyList());
 
-        User updatedUser = userService.updateUser(1L, updateDto);
+        Role role = new Role();
+        role.setId(10L);
+        role.setName("EMPLOYEE");
 
-        assertEquals("newusername", updatedUser.getUsername());
-        assertEquals("newemail@example.com", updatedUser.getEmail());
-        assertEquals("7654321", updatedUser.getPhoneNumber());
-        assertEquals("encodedNewPass", updatedUser.getPassword());
-        assertEquals("New Address", updatedUser.getAddress());
-        verify(userRepository).save(any(User.class));
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+        doReturn(role).when(userService).getRoleOrThrow(10L);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updated = userService.updateUser(id, dto);
+
+        assertEquals(1, updated.getRoles().size());
+        assertEquals("EMPLOYEE", updated.getRoles().get(0).getName());
+        verify(userRepository).save(updated);
     }
 
     @Test
@@ -441,44 +440,6 @@ class UserServiceImplTest {
     }
 
     @Test
-    void updateUser_validUpdate_returnsUpdatedUser() {
-        Long userId = 1L;
-        UpdateUserDto dto = new UpdateUserDto();
-        dto.setUsername("newUsername");
-        dto.setEmail("new@email.com");
-        dto.setPhoneNumber("123456789");
-        dto.setPassword("Nawpass2");
-        dto.setAddress("New Address");
-        dto.setRoleId(2L);
-
-        User existingUser = new User();
-        existingUser.setId(userId);
-        existingUser.setUsername("oldUsername");
-        existingUser.setEmail("old@email.com");
-        existingUser.setPhoneNumber("987654321");
-
-        Role newRole = new Role();
-        newRole.setId(2L);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.existsByUsername(dto.getUsername())).thenReturn(false);
-        when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
-        when(userRepository.existsByPhoneNumber(dto.getPhoneNumber())).thenReturn(false);
-        when(roleRepository.findById(dto.getRoleId())).thenReturn(Optional.of(newRole));
-        when(passwordEncoder.encode(dto.getPassword())).thenReturn("encodedPass");
-        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
-
-        User updated = userService.updateUser(userId, dto);
-
-        assertEquals("newUsername", updated.getUsername());
-        assertEquals("new@email.com", updated.getEmail());
-        assertEquals("123456789", updated.getPhoneNumber());
-        assertEquals("encodedPass", updated.getPassword());
-        assertEquals("New Address", updated.getAddress());
-        assertEquals(newRole, updated.getRoles().get(0));
-    }
-
-    @Test
     void updateUser_userNotFound_throwsException() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -659,5 +620,163 @@ class UserServiceImplTest {
         verify(userRepository).findAllByRoleNameAndEnabledIsTrue("CUSTOMER");
     }
 
+    @Test
+    void testGetAllEmployee_ReturnsList() {
+        Role role = Role.builder().name("EMPLOYEE").build();
 
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("employee1");
+        user.setEnabled(true);
+        user.setRoles(List.of(role));
+
+        when(userRepository.findAllByRoleNameAndEnabledIsTrue("EMPLOYEE"))
+                .thenReturn(List.of(user));
+
+        List<User> result = userService.getAllEmployee();
+
+        assertEquals(1, result.size());
+        assertEquals("employee1", result.get(0).getUsername());
+        verify(userRepository).findAllByRoleNameAndEnabledIsTrue("EMPLOYEE");
+    }
+
+    @Test
+    void testGetAllEmployee_ReturnsEmptyList() {
+        when(userRepository.findAllByRoleNameAndEnabledIsTrue("EMPLOYEE"))
+                .thenReturn(Collections.emptyList());
+
+        List<User> result = userService.getAllEmployee();
+
+        assertTrue(result.isEmpty());
+        verify(userRepository).findAllByRoleNameAndEnabledIsTrue("EMPLOYEE");
+    }
+
+    @Test
+    void testGetAllDisabledEmployees_ReturnsList() {
+        Role role = Role.builder().name("EMPLOYEE").build();
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("employee2");
+        user.setEnabled(false);
+        user.setRoles(List.of(role));
+        when(userRepository.findAllByRoleNameAndDisabledIsTrue("EMPLOYEE"))
+                .thenReturn(List.of(user));
+
+        List<User> result = userService.getAllDisabledEmployess();
+
+        assertEquals(1, result.size());
+        assertEquals("employee2", result.get(0).getUsername());
+        verify(userRepository).findAllByRoleNameAndDisabledIsTrue("EMPLOYEE");
+    }
+
+    @Test
+    void testGetAllDisabledEmployees_ReturnsEmptyList() {
+        when(userRepository.findAllByRoleNameAndDisabledIsTrue("EMPLOYEE"))
+                .thenReturn(Collections.emptyList());
+
+        List<User> result = userService.getAllDisabledEmployess();
+
+        assertTrue(result.isEmpty());
+        verify(userRepository).findAllByRoleNameAndDisabledIsTrue("EMPLOYEE");
+    }
+
+    @Test
+    void updateUser_invalidData_throwsInvalidUserDataException() {
+        Long invalidId = null;
+        UpdateUserDto invalidDto = null;
+
+        try (MockedStatic<UserValidator> mockedValidator = mockStatic(UserValidator.class)) {
+            mockedValidator.when(() -> UserValidator.validateId(invalidId))
+                    .thenThrow(new InvalidUserDataException("Invalid data"));
+
+            mockedValidator.when(() -> UserValidator.validateUpdateUserDto(invalidDto))
+                    .thenThrow(new InvalidUserDataException("Invalid data"));
+
+            assertThrows(InvalidUserDataException.class, () -> userService.updateUser(invalidId, invalidDto));
+        }
+    }
+
+    @Test
+    void updateUser_userNotFound_throwsResourceNotFoundException() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.updateUser(id, dto));
+    }
+
+    @Test
+    void updateUser_updateNameAndAddress_success() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setName("New Name");
+        dto.setAddress("New Address");
+
+        User existingUser = new User();
+        existingUser.setId(id);
+        existingUser.setName("Old Name");
+        existingUser.setAddress("Old Address");
+        existingUser.setUsername("user");
+        existingUser.setEmail("email@test.com");
+        existingUser.setPhoneNumber("12345");
+        existingUser.setRoles(Collections.emptyList());
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updated = userService.updateUser(id, dto);
+
+        assertEquals("New Name", updated.getName());
+        assertEquals("New Address", updated.getAddress());
+        verify(userRepository).save(updated);
+    }
+
+    @Test
+    void updateUser_updateUsername_alreadyExists_throwsUserAlreadyExistsException() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setUsername("existingUsername");
+
+        User existingUser = new User();
+        existingUser.setId(id);
+        existingUser.setUsername("oldUsername");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+        when(userRepository.existsByUsername("existingUsername")).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(id, dto));
+    }
+
+    @Test
+    void updateUser_updateEmail_alreadyExists_throwsUserAlreadyExistsException() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setEmail("existingEmail@test.com");
+
+        User existingUser = new User();
+        existingUser.setId(id);
+        existingUser.setEmail("oldEmail@test.com");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+        when(userRepository.existsByEmail("existingEmail@test.com")).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(id, dto));
+    }
+
+    @Test
+    void updateUser_updatePhoneNumber_alreadyExists_throwsUserAlreadyExistsException() {
+        Long id = 1L;
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setPhoneNumber("1234567");
+
+        User existingUser = new User();
+        existingUser.setId(id);
+        existingUser.setPhoneNumber("9999999");
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser));
+        when(userRepository.existsByPhoneNumber("1234567")).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(id, dto));
+    }
 }

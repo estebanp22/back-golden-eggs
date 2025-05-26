@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.sql.Date;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -239,5 +240,61 @@ public class OrderControllerTest {
 
         verify(orderService).getAllAsDTO();
     }
+
+    @Test
+    void testCancelOrder_Success() throws Exception {
+        Long orderId = 1L;
+
+        doNothing().when(orderService).cancelOrder(orderId);
+
+        mockMvc.perform(patch("/api/v1/orders/cancel/{id}", orderId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCancelOrder_OrderNotFound() throws Exception {
+        Long orderId = 99L;
+
+        doThrow(new ResourceNotFoundException("Order with ID " + orderId + " not found."))
+                .when(orderService).cancelOrder(orderId);
+
+        mockMvc.perform(patch("/api/v1/orders/cancel/{id}", orderId))
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    void testProcessOrder_Success() throws Exception {
+        Long orderId = 1L;
+        String paymentMethod = "Efectivo";
+
+        Map<String, String> payload = Map.of("paymentMethod", paymentMethod);
+        String jsonPayload = new ObjectMapper().writeValueAsString(payload);
+
+        doNothing().when(orderService).processOrder(orderId, paymentMethod);
+
+        mockMvc.perform(put("/api/v1/orders/process/{id}", orderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPayload))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testProcessOrder_OrderNotFound() throws Exception {
+        Long orderId = 99L;
+        String paymentMethod = "Tarjeta";
+
+        Map<String, String> payload = Map.of("paymentMethod", paymentMethod);
+        String jsonPayload = new ObjectMapper().writeValueAsString(payload);
+
+        doThrow(new ResourceNotFoundException("Order with ID " + orderId + " not found."))
+                .when(orderService).processOrder(orderId, paymentMethod);
+
+        mockMvc.perform(put("/api/v1/orders/process/{id}", orderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPayload))
+                .andExpect(status().isNotFound());
+    }
+
 
 }

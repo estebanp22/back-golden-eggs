@@ -1,7 +1,10 @@
 package com.goldeneggs.Role;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Entity class representing a user role.
@@ -9,7 +12,10 @@ import lombok.Data;
  */
 @Entity
 @Data
+@Builder
+@AllArgsConstructor
 @Table(name = "roles")
+@NoArgsConstructor
 public class Role {
 
     /**

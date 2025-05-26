@@ -7,6 +7,7 @@ import com.goldeneggs.Dto.UserDataDto;
 import com.goldeneggs.Exception.InvalidUserDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Exception.UserAlreadyExistsException;
+import com.goldeneggs.Role.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,7 +87,9 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerDto)))
                 .andExpect(status().isConflict())
-                .andExpect(content().string("User already exists"));
+                .andExpect(jsonPath("$.message").value("User already exists"));
+
+
     }
 
     @Test
@@ -98,7 +101,8 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid data"));
+                .andExpect(jsonPath("$.message").value("Invalid data"));
+
     }
 
     @Test
@@ -174,7 +178,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateUserDto)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("User not found"));
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 
     @Test
@@ -187,7 +191,9 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateUserDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid update"));
+                .andExpect(jsonPath("$.message").value("Invalid update"));
+
+
     }
 
     @Test
@@ -216,7 +222,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("User not found"));
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 
     @Test
@@ -236,7 +242,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/v1/users/1/disable"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("User not found"));
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 
     @Test
@@ -256,7 +262,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/v1/users/1/activate"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("User not found"));
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 
     @Test
@@ -273,7 +279,7 @@ class UserControllerTest {
 
         mockMvc.perform(delete("/api/v1/users/delete/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("User not found"));
+                .andExpect(jsonPath("$.message").value("User not found"));
     }
 
     @Test
@@ -290,7 +296,8 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("New password must not be null or blank."));
+                .andExpect(jsonPath("$.message").value("New password must not be null or blank."));
+
     }
 
     @Test
@@ -334,5 +341,59 @@ class UserControllerTest {
         mockMvc.perform(get("/api/v1/users/getAllCustomers"))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void testGetAllEmployee_ReturnsOk() throws Exception {
+        Role role = Role.builder().name("EMPLOYEE").build();
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("employee1");
+        user.setRoles(List.of(role));
+
+        when(userService.getAllEmployee()).thenReturn(List.of(user));
+
+        mockMvc.perform(get("/api/v1/users/getAllEmployee"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("employee1"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void testGetAllEmployee_ReturnsNoContent() throws Exception {
+        when(userService.getAllEmployee()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/v1/users/getAllEmployee"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void testGetAllEmployeeDisabled_ReturnsOk() throws Exception {
+        Role role = Role.builder().name("EMPLOYEE").build();
+
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("employee2");
+        user.setEnabled(false);
+        user.setRoles(List.of(role));
+
+        when(userService.getAllDisabledEmployess()).thenReturn(List.of(user));
+
+        mockMvc.perform(get("/api/v1/users/getAllEmployeeDisabled"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("employee2"))
+                .andExpect(jsonPath("$[0].enabled").value(false));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void testGetAllEmployeeDisabled_ReturnsNoContent() throws Exception {
+        when(userService.getAllDisabledEmployess()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/v1/users/getAllEmployeeDisabled"))
+                .andExpect(status().isNoContent());
+    }
+
 
 }

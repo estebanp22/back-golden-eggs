@@ -102,7 +102,7 @@ public class BillServiceImplTest {
         //Create egg of order
         orderEgg = OrderEgg.builder()
                 .id(1L)
-                .egg(egg)
+                .type(egg.getType().getType())
                 .quantity(10)
                 .unitPrice(12000.0)
                 .subtotal(120000.0)
@@ -111,7 +111,7 @@ public class BillServiceImplTest {
         //Create egg of order
         orderEgg2 = OrderEgg.builder()
                 .id(2L)
-                .egg(egg)
+                .type(egg.getType().getType())
                 .quantity(5)
                 .unitPrice(12000.0)
                 .subtotal(60000.0)
@@ -423,9 +423,7 @@ public class BillServiceImplTest {
 
         Bill updated = new Bill();
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            billService.update(1L, updated);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> billService.update(1L, updated));
 
         verify(billRepository).findById(1L);
     }
@@ -444,9 +442,7 @@ public class BillServiceImplTest {
                 .paid(true)
                 .build();
 
-        assertThrows(InvalidBillDataException.class, () -> {
-            billService.update(1L, invalid);
-        });
+        assertThrows(InvalidBillDataException.class, () -> billService.update(1L, invalid));
     }
 
     @Test
@@ -463,9 +459,7 @@ public class BillServiceImplTest {
                 .paid(true)
                 .build();
 
-        assertThrows(InvalidBillDataException.class, () -> {
-            billService.update(1L, invalid);
-        });
+        assertThrows(InvalidBillDataException.class, () -> billService.update(1L, invalid));
     }
     @Test
     void update_ShouldThrowException_WhenValidationOrderFails() {
@@ -481,9 +475,7 @@ public class BillServiceImplTest {
                 .paid(true)
                 .build();
 
-        assertThrows(InvalidBillDataException.class, () -> {
-            billService.update(1L, invalid);
-        });
+        assertThrows(InvalidBillDataException.class, () -> billService.update(1L, invalid));
     }
 
     @Test
@@ -499,9 +491,7 @@ public class BillServiceImplTest {
     void delete_ShouldThrowException_WhenBillNotFound() {
         when(billRepository.existsById(1L)).thenReturn(false);
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            billService.delete(1L);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> billService.delete(1L));
 
         verify(billRepository, never()).deleteById(anyLong());
     }
@@ -524,4 +514,30 @@ public class BillServiceImplTest {
 
         assertEquals(0L, result);
     }
+
+    @Test
+    void createBillForOrder_validOrder_returnsSavedBill() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setTotalPrice(250.0);
+
+        Bill savedBill = new Bill();
+        savedBill.setId(10L);
+        savedBill.setOrder(order);
+        savedBill.setTotalPrice(250.0);
+        savedBill.setPaid(true);
+        savedBill.setIssueDate(Date.valueOf(LocalDate.now()));
+
+        when(billRepository.save(any(Bill.class))).thenReturn(savedBill);
+
+        Bill result = billService.createBillForOrder(order);
+
+        assertNotNull(result);
+        assertEquals(order, result.getOrder());
+        assertEquals(250.0, result.getTotalPrice());
+        assertTrue(result.isPaid());
+        assertEquals(Date.valueOf(LocalDate.now()), result.getIssueDate());
+        verify(billRepository).save(any(Bill.class));
+    }
+
 }

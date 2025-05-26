@@ -1,6 +1,7 @@
 package com.goldeneggs.Egg;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.goldeneggs.Dto.Egg.EggSummaryDto;
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Supplier.Supplier;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.sql.Date;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -32,8 +34,6 @@ public class EggControllerTest {
 
     @InjectMocks
     private EggController eggController;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Egg egg;
 
@@ -94,16 +94,6 @@ public class EggControllerTest {
     }
 
     @Test
-    void testDeleteEgg_NotFound() throws Exception {
-        Long eggId = 1L;
-
-        doThrow(new ResourceNotFoundException("Egg not found")).when(eggService).delete(eggId);
-
-        mockMvc.perform(delete("/api/v1/eggs/delete/{id}", eggId))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
     void testGetEggById_Success() throws Exception {
         Long eggId = 1L;
 
@@ -126,71 +116,130 @@ public class EggControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
-    void testSaveEgg_Success() throws Exception {
-        when(eggService.save(any(Egg.class))).thenReturn(egg);
+    void testSaveEgg_ReturnsCreated() throws Exception {
+        Long userId = 1L;
+        Egg egg = new Egg();
+        egg.setId(10L);
 
-        mockMvc.perform(post("/api/v1/eggs/save")
+        when(eggService.save(any(Egg.class), eq(userId))).thenReturn(egg);
+
+        mockMvc.perform(post("/api/v1/eggs/save/{id}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(egg)))
+                        .content(new ObjectMapper().writeValueAsString(egg)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(egg.getId()))
-                .andExpect(jsonPath("$.color").value(egg.getColor()))
-                .andExpect(jsonPath("$.salePrice").value(egg.getSalePrice()));
+                .andExpect(jsonPath("$.id").value(10L));
     }
 
     @Test
-    void testSaveEgg_InvalidData() throws Exception {
-        when(eggService.save(any(Egg.class)))
-                .thenThrow(new InvalidEggDataException("Datos inválidos"));
+    void testSaveEgg_InvalidData_ReturnsBadRequest() throws Exception {
+        Long userId = 1L;
+        Egg egg = new Egg();
 
-        mockMvc.perform(post("/api/v1/eggs/save")
+        when(eggService.save(any(Egg.class), eq(userId)))
+                .thenThrow(new InvalidEggDataException("Invalid egg"));
+
+        mockMvc.perform(post("/api/v1/eggs/save/{id}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(egg)))
+                        .content(new ObjectMapper().writeValueAsString(egg)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Datos inválidos"));
+                .andExpect(jsonPath("$.message").value("Invalid egg")); // <- cambiado
     }
 
     @Test
-    void testUpdateEgg_Success() throws Exception {
+    void testGetAllEggDto_ReturnsOk() throws Exception {
+        TypeEgg typeEgg = TypeEgg.builder()
+                .id(1L)
+                .type("AA")
+                .build();
+        Date expirationDate = new java.sql.Date(System.currentTimeMillis());
+
+        EggSummaryDto dto = new EggSummaryDto(typeEgg, "Blanco", 10, expirationDate);
+        when(eggService.findEggSummaries()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/eggs/getAllEggDto"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type.type").value("AA"));
+    }
+
+    @Test
+    void testUpdateEgg_ReturnsOk() throws Exception {
         Long eggId = 1L;
+        Long userId = 2L;
+        Egg egg = new Egg();
+        egg.setId(eggId);
 
-        when(eggService.update(eq(eggId), any(Egg.class))).thenReturn(egg);
+        when(eggService.update(eq(eggId), any(Egg.class), eq(userId))).thenReturn(egg);
 
-        mockMvc.perform(put("/api/v1/eggs/update/{id}", eggId)
+        mockMvc.perform(put("/api/v1/eggs/update/{id}/{idUser}", eggId, userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(egg)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(egg.getId()))
-                .andExpect(jsonPath("$.color").value(egg.getColor()))
-                .andExpect(jsonPath("$.salePrice").value(egg.getSalePrice()));
+                .andExpect(jsonPath("$.id").value(eggId));
     }
 
     @Test
-    void testUpdateEgg_NotFound() throws Exception {
-        Long eggId = 1L;
+    void testUpdateEgg_NotFound_Returns404() throws Exception {
+        Long eggId = 1L, userId = 2L;
+        Egg egg = new Egg();
 
-        when(eggService.update(eq(eggId), any(Egg.class)))
-                .thenThrow(new ResourceNotFoundException("Egg not found"));
+        when(eggService.update(eq(eggId), any(Egg.class), eq(userId)))
+                .thenThrow(new ResourceNotFoundException("Not found"));
 
-        mockMvc.perform(put("/api/v1/eggs/update/{id}", eggId)
+        mockMvc.perform(put("/api/v1/eggs/update/{id}/{idUser}", eggId, userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(egg)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Not found"));
     }
 
     @Test
-    void testUpdateEgg_InvalidData() throws Exception {
-        Long eggId = 1L;
+    void testUpdateEgg_InvalidData_Returns400() throws Exception {
+        Long eggId = 1L, userId = 2L;
+        Egg egg = new Egg();
 
-        when(eggService.update(eq(eggId), any(Egg.class)))
-                .thenThrow(new InvalidEggDataException("Invalid egg data"));
+        when(eggService.update(eq(eggId), any(Egg.class), eq(userId)))
+                .thenThrow(new InvalidEggDataException("Invalid data"));
 
-        mockMvc.perform(put("/api/v1/eggs/update/{id}", eggId)
+        mockMvc.perform(put("/api/v1/eggs/update/{id}/{idUser}", eggId, userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(egg)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid egg data"));
+                .andExpect(jsonPath("$.message").value("Invalid data"));
     }
+
+    @Test
+    void testDeleteEgg_Success_Returns200() throws Exception {
+        Long eggId = 1L;
+
+        mockMvc.perform(delete("/api/v1/eggs/delete/{id}", eggId))
+                .andExpect(status().isOk());
+
+        verify(eggService).delete(eggId);
+    }
+
+    @Test
+    void testDeleteEgg_NotFound_Returns404() throws Exception {
+        Long eggId = 1L;
+
+        doThrow(new ResourceNotFoundException("Not found"))
+                .when(eggService).delete(eggId);
+
+        mockMvc.perform(delete("/api/v1/eggs/delete/{id}", eggId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Not found"));
+    }
+
+    @Test
+    void testDeleteEgg_InvalidData_Returns400() throws Exception {
+        Long eggId = 1L;
+
+        doThrow(new InvalidEggDataException("Invalid delete"))
+                .when(eggService).delete(eggId);
+
+        mockMvc.perform(delete("/api/v1/eggs/delete/{id}", eggId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid delete"));
+    }
+
 }

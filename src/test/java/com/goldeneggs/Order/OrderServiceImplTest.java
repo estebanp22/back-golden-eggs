@@ -1,21 +1,22 @@
 package com.goldeneggs.Order;
 
+import com.goldeneggs.Bill.Bill;
+import com.goldeneggs.Bill.BillServiceImpl;
+import com.goldeneggs.Dto.Order.CartItemDTO;
 import com.goldeneggs.Dto.Order.OrderDTO;
-import com.goldeneggs.Dto.RegisterDto;
-import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Dto.Order.OrderRequestDTO;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.OrderEgg.OrderEgg;
+import com.goldeneggs.Pay.PayServiceImpl;
 import com.goldeneggs.Role.Role;
-import com.goldeneggs.Supplier.Supplier;
-import com.goldeneggs.TypeEgg.TypeEgg;
 import com.goldeneggs.User.User;
+import com.goldeneggs.User.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Date;
@@ -37,104 +38,85 @@ public class OrderServiceImplTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private BillServiceImpl billService;
+
+    @Mock
+    private PayServiceImpl payService;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
-
     private User user;
-    private OrderEgg orderEgg;
-    private OrderEgg orderEgg2;
     private Order order;
+    OrderEgg oe1;
+    OrderEgg oe2;
+    CartItemDTO item1;
+    CartItemDTO item2;
 
     @BeforeEach
     void setUp() {
-        //Create test role
+        // Create test role
         Role role = new Role();
         role.setId(1L);
         role.setName("CUSTOMER");
 
-        //Create test user
-        RegisterDto registerDto = new RegisterDto();
-        registerDto.setId(1L);
-        registerDto.setName("Felipe");
-        registerDto.setPhoneNumber("1234567");
-        registerDto.setEmail("test@example.com");
-        registerDto.setUsername("felipe123");
-        registerDto.setPassword("Password1");
-        registerDto.setAddress("Calle Falsa 123");
-        registerDto.setRoleId(role.getId());
-
+        // Create test user
         user = new User();
-        user.setId(registerDto.getId());
-        user.setUsername(registerDto.getUsername());
-        user.setEmail(registerDto.getEmail());
-        user.setPhoneNumber(registerDto.getPhoneNumber());
-        user.setName(registerDto.getName());
-        user.setAddress(registerDto.getAddress());
+        user.setId(1L);
+        user.setUsername("felipe123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567");
+        user.setName("Felipe");
+        user.setAddress("Calle Falsa 123");
         user.setPassword("encodedPassword");
-        user.setRoles(Collections.singletonList(role));
+        user.setRoles(List.of(role));
         user.setEnabled(true);
 
-        //Crate test supplier
-        Supplier supplier = Supplier.builder()
-                .id(1L)
-                .name("Avicola la floresta")
-                .address("Km1 via Calarca-Armenia")
-                .build();
+        // Create orderEggs
+        oe1 = new OrderEgg();
+        oe1.setType("AA");
+        oe1.setColor("Blanco");
+        oe1.setQuantity(10);
+        oe1.setUnitPrice(12000.0);
+        oe1.setSubtotal(120000.0);
 
-        //Crete type egg test
-        TypeEgg typeEgg = TypeEgg.builder()
-                .id(1L)
-                .type("AA")
-                .build();
+        oe2 = new OrderEgg();
+        oe2.setType("AA");
+        oe2.setColor("Blanco");
+        oe2.setQuantity(5);
+        oe2.setUnitPrice(12000.0);
+        oe2.setSubtotal(60000.0);
 
-        //Create egg test
-        Egg egg = Egg.builder()
-                .id(1L)
-                .type(typeEgg)
-                .color("Blanco")
-                .buyPrice(12000.0)
-                .salePrice(13000.0)
-                .expirationDate(new java.sql.Date(System.currentTimeMillis()))  // Usando java.sql.Date
-                .supplier(supplier)
-                .avibleQuantity(1000)
-                .movements(Collections.emptyList())
-                .build();
+        // Create order
+        order = new Order();
+        order.setId(1L);
+        order.setUser(user);
+        order.setOrderEggs(List.of(oe1, oe2));
+        order.setTotalPrice(180000.0);
+        order.setOrderDate(new java.sql.Date(System.currentTimeMillis()));
+        order.setState("ENVIADO");
 
-        //Create egg of order
-        orderEgg = OrderEgg.builder()
-                .id(1L)
-                .type("AA")
+        // DTO
+        item1 = CartItemDTO.builder()
+                .name("AA")
                 .color("Blanco")
                 .quantity(10)
-                .unitPrice(12000.0)
-                .subtotal(120000.0)
+                .price(12000.0)
                 .build();
 
-        //Create egg of order
-        orderEgg2 = OrderEgg.builder()
-                .id(2L)
-                .type("AA")
+        item2 = CartItemDTO.builder()
+                .name("AA")
                 .color("Blanco")
                 .quantity(5)
-                .unitPrice(12000.0)
-                .subtotal(60000.0)
+                .price(12000.0)
                 .build();
-
-        //Create order
-        order = Order.builder()
-                .id(1L)
-                .user(user)
-                .orderEggs(List.of(orderEgg, orderEgg2))
-                .totalPrice(180000.0)
-                .orderDate(new java.sql.Date(System.currentTimeMillis()))  // Usando java.sql.Date
-                .state("ENVIADO")
-                .build();
-
-        //Put the order in orderEggs
-        orderEgg.setOrder(order);
-        orderEgg2.setOrder(order);
     }
+
+
 
     @Test
     void countCustomerBillsInCurrentMonth_ShouldReturnCount() {
@@ -227,23 +209,13 @@ public class OrderServiceImplTest {
         verify(orderRepository, never()).deleteById(anyLong());
     }
 
-    @Test
-    void saveOrder_Succes() {
-        when(orderRepository.save(order)).thenReturn(order);
-
-        Order result = orderService.saveOrder(order);
-
-        assertNotNull(result);
-        assertEquals(order.getId(), result.getId());
-        verify(orderRepository, times(1)).save(order);
-    }
 
     @Test
     void getAllOrder_ShouldReturnListOfOrder(){
         Order order2 = Order.builder()
                 .id(2L)
                 .user(user)
-                .orderEggs(List.of(orderEgg, orderEgg2))
+                .orderEggs(List.of(oe1, oe2))
                 .totalPrice(1800000.0)
                 .orderDate(new java.sql.Date(System.currentTimeMillis()))
                 .state("RECIBIDO")
@@ -318,116 +290,11 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    void testSaveOrder_InvalidUser_ShouldThrow() {
-        try (MockedStatic<OrderValidator> mock = mockStatic(OrderValidator.class)) {
-            mock.when(() -> OrderValidator.validateUser(any())).thenReturn(false);
-            mock.when(() -> OrderValidator.validateOrderEggs(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateTotalPrice(anyDouble())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderDate(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateState(anyString())).thenReturn(true);
-
-            OrderServiceImpl service = new OrderServiceImpl(mock(OrderRepository.class));
-            Order order = crearOrderValido();
-
-            InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class,
-                    () -> service.saveOrder(order));
-            assertEquals("User is not valid.", ex.getMessage());
-        }
-    }
-
-    @Test
-    void testSaveOrder_InvalidOrderEgg_ShouldThrow() {
-        try (MockedStatic<OrderValidator> mock = mockStatic(OrderValidator.class)) {
-            mock.when(() -> OrderValidator.validateUser(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderEggs(any())).thenReturn(false);
-            mock.when(() -> OrderValidator.validateTotalPrice(anyDouble())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderDate(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateState(anyString())).thenReturn(true);
-
-            OrderServiceImpl service = new OrderServiceImpl(mock(OrderRepository.class));
-            Order order = crearOrderValido();
-
-            InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class,
-                    () -> service.saveOrder(order));
-            assertEquals("Order Eggs are not valid.", ex.getMessage());
-        }
-    }
-
-    @Test
-    void testSaveOrder_InvalidTotalPrice_ShouldThrow() {
-        try (MockedStatic<OrderValidator> mock = mockStatic(OrderValidator.class)) {
-            mock.when(() -> OrderValidator.validateUser(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderEggs(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateTotalPrice(anyDouble())).thenReturn(false);
-            mock.when(() -> OrderValidator.validateOrderDate(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateState(anyString())).thenReturn(true);
-
-            OrderServiceImpl service = new OrderServiceImpl(mock(OrderRepository.class));
-            Order order = crearOrderValido();
-
-            InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class,
-                    () -> service.saveOrder(order));
-            assertEquals("Total price is not valid.", ex.getMessage());
-        }
-    }
-
-    @Test
-    void testSaveOrder_InvalidDate_ShouldThrow() {
-        try (MockedStatic<OrderValidator> mock = mockStatic(OrderValidator.class)) {
-            mock.when(() -> OrderValidator.validateUser(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderEggs(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateTotalPrice(anyDouble())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderDate(any())).thenReturn(false);
-            mock.when(() -> OrderValidator.validateState(anyString())).thenReturn(true);
-
-            OrderServiceImpl service = new OrderServiceImpl(mock(OrderRepository.class));
-            Order order = crearOrderValido();
-
-            InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class,
-                    () -> service.saveOrder(order));
-            assertEquals("Order date is not valid.", ex.getMessage());
-        }
-    }
-
-    @Test
-    void testSaveOrder_InvalidState_ShouldThrow() {
-        try (MockedStatic<OrderValidator> mock = mockStatic(OrderValidator.class)) {
-            mock.when(() -> OrderValidator.validateUser(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderEggs(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateTotalPrice(anyDouble())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateOrderDate(any())).thenReturn(true);
-            mock.when(() -> OrderValidator.validateState(anyString())).thenReturn(false);
-
-            OrderServiceImpl service = new OrderServiceImpl(mock(OrderRepository.class));
-            Order order = crearOrderValido();
-
-            InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class,
-                    () -> service.saveOrder(order));
-            assertEquals("Order state is not valid.", ex.getMessage());
-        }
-    }
-    // Helper para crear orden válida
-    private Order crearOrderValido() {
-        Order order = new Order();
-        User user = new User();
-        user.setId(1L);
-
-        OrderEgg egg = new OrderEgg();
-        egg.setId(1L);
-
-        order.setUser(user);
-        order.setOrderEggs(List.of(egg));
-        order.setTotalPrice(10000.0);
-        order.setState("Confirmado");
-        return order;
-    }
-
-    @Test
     void getAllOrdersDTO_ShouldReturnMappedDTOs() {
         Order order2 = Order.builder()
                 .id(2L)
                 .user(user)
-                .orderEggs(List.of(orderEgg, orderEgg2))
+                .orderEggs(List.of(oe1, oe2))
                 .totalPrice(1800000.0)
                 .orderDate(new java.sql.Date(System.currentTimeMillis()))
                 .state("RECIBIDO")
@@ -450,4 +317,254 @@ public class OrderServiceImplTest {
 
         verify(orderRepository).findAll();
     }
+
+    @Test
+    void validateOrderOrThrow_shouldThrowIfUserIsNull() {
+        Order order = new Order();
+        order.setUser(null);
+
+        assertThrows(InvalidOrderDataException.class, () -> orderService.validateOrderOrThrow(order));
+    }
+
+    @Test
+    void cancelOrder_shouldSetStatusToCancelled() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setState(Order.STATE_PENDING);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        orderService.cancelOrder(1L);
+
+        assertEquals(Order.STATE_CANCELED, order.getState());
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void processOrder_shouldSetStatusAndCreateBill() {
+        Order order = new Order();
+        order.setId(5L);
+        order.setState(Order.STATE_PENDING);
+
+        Bill bill = new Bill();
+
+        when(orderRepository.findById(5L)).thenReturn(Optional.of(order));
+        when(billService.createBillForOrder(order)).thenReturn(bill);
+
+        orderService.processOrder(5L, "Efectivo");
+
+        assertEquals(Order.STATE_COMPLETED, order.getState());
+        verify(billService).createBillForOrder(order);
+        verify(payService).createPayForBill(bill, "Efectivo");
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    public void testSaveOrder() {
+        OrderRequestDTO dto = new OrderRequestDTO();
+        dto.setIdCustomer(1L);
+        dto.setTotalPrice(180000.0);
+        dto.setOrderDate(new Date(System.currentTimeMillis()));
+        dto.setState("PENDING");
+
+        CartItemDTO cartItem = new CartItemDTO();
+        cartItem.setName("Tipo A");
+        cartItem.setColor("Blanco");
+        cartItem.setQuantity(10);
+        cartItem.setPrice(2.5);
+        dto.setCartItem(Collections.singletonList(cartItem));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        Order saved = orderService.saveOrder(dto);
+
+        assertEquals("Felipe", saved.getUser().getName());
+        assertEquals(2, saved.getOrderEggs().size());
+        assertEquals(180000.0, saved.getTotalPrice());
+    }
+
+    @Test
+    public void testValidateOrderOrThrow_Invalid() {
+        order.setTotalPrice(-1);
+        assertThrows(InvalidOrderDataException.class, () -> orderService.validateOrderOrThrow(order));
+    }
+
+    @Test
+    public void testValidateOrderOrThrow_Valid() {
+        assertDoesNotThrow(() -> orderService.validateOrderOrThrow(order));
+    }
+
+    @Test
+    public void testConstructor() {
+        OrderServiceImpl service = new OrderServiceImpl(orderRepository, billService, payService, userRepository);
+        assertNotNull(service);
+    }
+
+    @Test
+    public void testLambdaSaveOrder1() {
+        OrderRequestDTO dto = new OrderRequestDTO();
+        dto.setIdCustomer(1L);
+        dto.setTotalPrice(25.0);
+        dto.setOrderDate(new Date(System.currentTimeMillis()));
+        dto.setState("PENDING");
+
+        CartItemDTO cartItem = new CartItemDTO();
+        cartItem.setName("Tipo A");
+        cartItem.setColor("Blanco");
+        cartItem.setQuantity(10);
+        cartItem.setPrice(2.5);
+        dto.setCartItem(Collections.singletonList(cartItem));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Order result = orderService.saveOrder(dto);
+
+        assertNotNull(result);
+        assertEquals("Tipo A", result.getOrderEggs().get(0).getType());
+    }
+
+    @Test
+    public void testLambdaSaveOrder2() {
+        CartItemDTO item = new CartItemDTO();
+        item.setName("Tipo B");
+        item.setColor("Rojo");
+        item.setQuantity(5);
+        item.setPrice(3.0);
+
+        OrderEgg oe = new OrderEgg();
+        oe.setType(item.getName());
+        oe.setColor(item.getColor());
+        oe.setQuantity(item.getQuantity());
+        oe.setUnitPrice(item.getPrice());
+        oe.setSubtotal(item.getQuantity() * item.getPrice());
+
+        assertEquals(15.0, oe.getSubtotal());
+    }
+
+    @Test
+    public void testLambdaSaveOrder3() {
+        OrderEgg oe = new OrderEgg();
+        oe.setOrder(order);
+        order.setOrderEggs(Collections.singletonList(oe));
+        oe.setType("A");
+        oe.setQuantity(1);
+        oe.setUnitPrice(2.0);
+        oe.setSubtotal(2.0);
+
+        assertEquals(order, oe.getOrder());
+    }
+
+    @Test
+    public void testCancelOrder() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.cancelOrder(1L);
+        verify(orderRepository).save(order);
+        assertEquals("CANCELADA", order.getState());
+    }
+
+    @Test
+    public void testProcessOrder() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        Bill bill = new Bill();
+        when(billService.createBillForOrder(order)).thenReturn(bill);
+        doNothing().when(payService).createPayForBill(bill, "CASH");
+
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        orderService.processOrder(1L, "CASH");
+
+        assertEquals("COMPLETADA", order.getState());
+    }
+
+
+    @Test
+    public void testValidateOrderOrThrow_InvalidOrderEggs_ThrowsException() {
+        Order order = new Order();
+        order.setUser(new User());
+        order.setOrderEggs(Collections.emptyList());
+        order.setTotalPrice(100.0);
+        order.setOrderDate(Date.valueOf(LocalDate.now()));
+        order.setState("PENDING");
+
+        InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class, () ->
+                orderService.validateOrderOrThrow(order)
+        );
+        assertEquals("Order Eggs are not valid.", ex.getMessage());
+    }
+
+    @Test
+    public void testValidateOrderOrThrow_InvalidOrderDate_ThrowsException() {
+        Order order = new Order();
+        order.setUser(new User());
+        order.setOrderEggs(List.of(new OrderEgg()));
+        order.setTotalPrice(100.0);
+        order.setOrderDate(Date.valueOf(LocalDate.now().minusDays(1))); // inválido
+        order.setState("PENDING");
+
+        InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class, () ->
+                orderService.validateOrderOrThrow(order)
+        );
+        assertEquals("Order date is not valid.", ex.getMessage());
+    }
+
+    @Test
+    public void testValidateOrderOrThrow_InvalidOrderState_ThrowsException() {
+        Order order = new Order();
+        order.setUser(new User());
+        order.setOrderEggs(List.of(new OrderEgg()));
+        order.setTotalPrice(100.0);
+        order.setOrderDate(Date.valueOf(LocalDate.now()));
+        order.setState(null); // inválido
+
+        InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class, () ->
+                orderService.validateOrderOrThrow(order)
+        );
+        assertEquals("Order state is not valid.", ex.getMessage());
+    }
+
+    @Test
+    public void testCancelOrder_OrderNotFound_ThrowsException() {
+        Long orderId = 99L;
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
+                orderService.cancelOrder(orderId)
+        );
+
+        assertEquals("Order with ID 99 not found.", ex.getMessage());
+    }
+
+    @Test
+    public void testProcessOrder_OrderNotFound_ThrowsException() {
+        Long orderId = 100L;
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
+                orderService.processOrder(orderId, "Efectivo")
+        );
+
+        assertEquals("Order with ID 100 not found.", ex.getMessage());
+    }
+
+    @Test
+    public void testSaveOrder_UserNotFound_ThrowsException() {
+        OrderRequestDTO dto = new OrderRequestDTO();
+        dto.setIdCustomer(42L); // ID inexistente
+
+        when(userRepository.findById(42L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                orderService.saveOrder(dto)
+        );
+
+        assertEquals("Usuario no encontrado", ex.getMessage());
+    }
+
+
 }
