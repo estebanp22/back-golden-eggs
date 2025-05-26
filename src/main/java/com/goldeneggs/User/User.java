@@ -2,6 +2,8 @@ package com.goldeneggs.User;
 
 import com.goldeneggs.Role.Role;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.*;
@@ -12,7 +14,9 @@ import java.util.*;
  */
 @Entity
 @Data
+@Builder
 @Table(name = "users")
+@AllArgsConstructor
 public class User {
 
     @Id

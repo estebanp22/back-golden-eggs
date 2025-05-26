@@ -1,13 +1,9 @@
 package com.goldeneggs.OrderEgg;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidOrderEggDataException;
-import com.goldeneggs.Exception.InvalidTypeEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;
-import com.goldeneggs.TypeEgg.TypeEgg;
-import com.goldeneggs.TypeEgg.TypeEggService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -54,7 +49,7 @@ public class OrderEggControllerTest {
         orderEgg.setUnitPrice(10.0);
         orderEgg.setSubtotal(50.0);
         orderEgg.setOrder(new Order());
-        orderEgg.setEgg(new Egg());
+        orderEgg.setType("AAA");
     }
 
     @Test

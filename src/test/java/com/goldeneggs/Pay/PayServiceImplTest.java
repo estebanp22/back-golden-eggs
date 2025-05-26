@@ -2,9 +2,9 @@ package com.goldeneggs.Pay;
 
 import com.goldeneggs.Bill.BillRepository;
 import com.goldeneggs.Dto.RegisterDto;
-import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.InvalidPayDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.Order.Order;
 import com.goldeneggs.Role.Role;
 import com.goldeneggs.User.User;
 import com.goldeneggs.Bill.Bill;
@@ -107,13 +107,11 @@ class PayServiceImplTest {
     @Test
     void testSave_ValidData() {
         try (MockedStatic<PayValidator> mockedValidator = mockStatic(PayValidator.class)) {
-            // Configurar validaciones
             mockedValidator.when(() -> PayValidator.validateUser(samplePay.getUser())).thenReturn(true);
             mockedValidator.when(() -> PayValidator.validateBill(samplePay.getBill())).thenReturn(true);
             mockedValidator.when(() -> PayValidator.validateAmountPaid(samplePay.getAmountPaid())).thenReturn(true);
             mockedValidator.when(() -> PayValidator.validatePaymentMethod(samplePay.getPaymentMethod())).thenReturn(true);
 
-            // Configurar repositorios
             when(userRepository.existsById(samplePay.getUser().getId())).thenReturn(true);
             when(billRepository.existsById(samplePay.getBill().getId())).thenReturn(true);
             when(payRepository.save(any(Pay.class))).thenReturn(samplePay);
@@ -305,4 +303,39 @@ class PayServiceImplTest {
             assertEquals("Invalid payment method", exception.getMessage());
         }
     }
+
+    @Test
+    void createPayForBill_createsAndSavesPayCorrectly() {
+        User user = new User();
+        user.setId(5L);
+
+        Order order = new Order();
+        order.setUser(user);
+
+        Bill bill = new Bill();
+        bill.setId(10L);
+        bill.setOrder(order);
+        bill.setTotalPrice(150.0);
+
+        String paymentMethod = "EFECTIVO";
+
+        when(userRepository.existsById(user.getId())).thenReturn(true);
+        when(billRepository.existsById(bill.getId())).thenReturn(true);
+        doAnswer(invocation -> invocation.getArgument(0))
+                .when(payRepository).save(any(Pay.class));
+
+        payService.createPayForBill(bill, paymentMethod);
+
+        ArgumentCaptor<Pay> payCaptor = ArgumentCaptor.forClass(Pay.class);
+        verify(payRepository).save(payCaptor.capture());
+
+        Pay savedPay = payCaptor.getValue();
+        assertEquals(bill, savedPay.getBill());
+        assertEquals(user, savedPay.getUser());
+        assertEquals(150.0, savedPay.getAmountPaid());
+        assertEquals(paymentMethod, savedPay.getPaymentMethod());
+    }
+
+
+
 }

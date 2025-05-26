@@ -295,7 +295,7 @@ public class UserServiceImpl implements UserService {
      * @return The Role entity.
      * @throws ResourceNotFoundException if the role is not found.
      */
-    private Role getRoleOrThrow(Long roleId) {
+    protected Role getRoleOrThrow(Long roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
     }
