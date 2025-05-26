@@ -2,7 +2,9 @@ package com.goldeneggs.Order;
 
 import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.Order.OrderRequestDTO;
+import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.ResourceNotFoundException;
+import com.goldeneggs.OrderEgg.OrderEgg;
 import org.apache.coyote.BadRequestException;
 import org.hibernate.service.spi.ServiceException;
 
@@ -99,4 +101,20 @@ public interface OrderService {
      * @param paymentMethod The payment method to be used for processing the order.
      */
     void processOrder(Long id, String paymentMethod);
+
+    /**
+     * Create order when save a egg
+     * @param id id for the useer
+     * @param orderEggs list of egg in the order
+     * @param egg to save the price
+     * @return Order te order generated
+     */
+    Order createOrderForEgg(Long id, List<OrderEgg> orderEggs, Egg egg);
+
+    /**
+     * Retrives a list of all order of the especify customer
+     * @param customerId id to the customer
+     * @return a list of all orders
+     */
+    List<OrderRequestDTO>  getOrdersByCustomerId(Long customerId);
 }

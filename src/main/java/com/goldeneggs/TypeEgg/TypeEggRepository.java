@@ -27,4 +27,5 @@ public interface TypeEggRepository extends JpaRepository<TypeEgg, Long> {
      */
     boolean existsByTypeIgnoreCaseAndIdNot(String type, Long id);
 
+    TypeEgg findByType(String type);
 }

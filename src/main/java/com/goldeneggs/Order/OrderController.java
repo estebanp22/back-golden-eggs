@@ -92,6 +92,8 @@ public class OrderController {
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }catch (InvalidOrderDataException e) {
             return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }catch (RuntimeException e){
+            return new ResponseEntity<>("Error al procresar la orden:" + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -205,7 +207,9 @@ public class OrderController {
         }
     }
 
-
-
-
+    @GetMapping("/getOrdersCustomer/{id}")
+    public ResponseEntity<List<OrderRequestDTO>> getOrdersByCustomer(@PathVariable Long id) {
+        List<OrderRequestDTO> orders = orderService.getOrdersByCustomerId(id);
+        return ResponseEntity.ok(orders);
+    }
 }

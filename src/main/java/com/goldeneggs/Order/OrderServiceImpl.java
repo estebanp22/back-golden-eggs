@@ -2,9 +2,12 @@ package com.goldeneggs.Order;
 
 import com.goldeneggs.Bill.Bill;
 import com.goldeneggs.Bill.BillService;
+import com.goldeneggs.Dto.Order.CartItemDTO;
 import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.Order.OrderItemDTO;
 import com.goldeneggs.Dto.Order.OrderRequestDTO;
+import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Egg.EggService;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Pay.PayService;
@@ -37,6 +40,9 @@ public class OrderServiceImpl implements OrderService {
     private final BillService billService;
 
     private final PayService payService;
+
+    @Autowired
+    private EggService eggService;
 
     /**
      * Constructs an instance of the OrderServiceImpl class.
@@ -100,6 +106,17 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(dto.getIdCustomer())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        // 1. Crear la orden vacía (sin huevos)
+        Order order = new Order();
+        order.setUser(user);
+        order.setTotalPrice(dto.getTotalPrice());
+        order.setOrderDate(dto.getOrderDate());
+        order.setState(dto.getState());
+
+        validateOrderOrThrow(order);
+        Order savedOrder = orderRepository.save(order); // ← ya tiene ID
+
+        // 2. Ahora sí procesar los huevos
         List<OrderEgg> orderEggs = dto.getCartItem().stream().map(item -> {
             OrderEgg oe = new OrderEgg();
             oe.setType(item.getName());
@@ -107,21 +124,20 @@ public class OrderServiceImpl implements OrderService {
             oe.setQuantity(item.getQuantity());
             oe.setUnitPrice(item.getPrice());
             oe.setSubtotal(item.getQuantity() * item.getPrice());
+            oe.setOrder(savedOrder); // ← ya puedes asociar la orden
+
+            // Descontar los huevos y registrar el movimiento
+            boolean response = eggService.updateEggQuantity(oe.getQuantity() * 30, oe.getColor(), oe.getType(), user, savedOrder);
+
+            if (!response) {
+                throw new RuntimeException("No hay suficiente inventario para " + oe.getQuantity() * 30 + " huevos " + oe.getColor() + " tipo " + oe.getType());
+            }
             return oe;
         }).collect(Collectors.toList());
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setOrderEggs(orderEggs);
-        order.setTotalPrice(dto.getTotalPrice());
-        order.setOrderDate(dto.getOrderDate());
-        order.setState(dto.getState());
-
-        orderEggs.forEach(oe -> oe.setOrder(order)); // establecer relación inversa
-
-        return orderRepository.save(order);
+        savedOrder.setOrderEggs(orderEggs);
+        return orderRepository.save(savedOrder); // actualizar con los huevos
     }
-
 
     @Override
     public Order updateOrder(Long id, Order order) {
@@ -189,9 +205,6 @@ public class OrderServiceImpl implements OrderService {
         if(!OrderValidator.validateUser(order.getUser())){
             throw new InvalidOrderDataException("User is not valid.");
         }
-        if(!OrderValidator.validateOrderEggs(order.getOrderEggs())){
-            throw new InvalidOrderDataException("Order Eggs are not valid.");
-        }
         if(!OrderValidator.validateTotalPrice(order.getTotalPrice())){
             throw new InvalidOrderDataException("Total price is not valid.");
         }
@@ -237,6 +250,17 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Order with ID " + id + " not found.")
         );
+
+        for (OrderEgg oe : order.getOrderEggs()) {
+            int totalHuevos = oe.getQuantity() * 30;
+
+            // Suponiendo que eggService.updateEggQuantity permite valores negativos para restar y positivos para sumar
+            boolean result = eggService.restockEggs(totalHuevos, oe.getColor(), oe.getType(), order.getUser(), order);
+
+            if (!result) {
+                throw new RuntimeException("Error al devolver huevos al inventario para tipo: " + oe.getType() + ", color: " + oe.getColor());
+            }
+        }
         order.setState(Order.STATE_CANCELED);
         orderRepository.save(order);
     }
@@ -260,4 +284,54 @@ public class OrderServiceImpl implements OrderService {
         order.setState(Order.STATE_COMPLETED);
         orderRepository.save(order);
     }
+
+    /**
+     * {@inheritDoc}
+     * @param id id for the useer
+     * @param orderEggs list of egg in the order
+     * @param egg to save the price
+     * @return
+     */
+    @Override
+    public Order createOrderForEgg(Long id, List<OrderEgg> orderEggs, Egg egg){
+        Order order = new Order();
+        order.setUser(userRepository.getById(id));
+        order.setOrderEggs(orderEggs);
+        order.setTotalPrice(egg.getBuyPrice() * egg.getAvibleQuantity());
+        order.setOrderDate(new java.sql.Date(System.currentTimeMillis()));
+        order.setState(Order.STATE_INVENTORY);
+
+        return orderRepository.save(order);
+    }
+
+    /**
+     * {inheritDoc}
+     * @param id id to the customer
+     * @return a list of all orders by customer
+     */
+    @Override
+    public List<OrderRequestDTO> getOrdersByCustomerId(Long id){
+        List<Order> orders = orderRepository.getOrdersByUserId(id);
+
+        return orders.stream().map(order -> {
+            OrderRequestDTO dto = new OrderRequestDTO();
+            dto.setIdCustomer(order.getUser().getId());
+            dto.setState(order.getState());
+            dto.setTotalPrice(order.getTotalPrice());
+            dto.setOrderDate(order.getOrderDate());
+
+            List<CartItemDTO> cartItems = order.getOrderEggs().stream().map(item -> {
+                CartItemDTO cartItemDTO = new CartItemDTO();
+                cartItemDTO.setName(item.getType());
+                cartItemDTO.setPrice(item.getUnitPrice());
+                cartItemDTO.setQuantity(item.getQuantity());
+                return cartItemDTO;
+            }).toList();
+
+            dto.setCartItem(cartItems);
+
+            return dto;
+        }).toList();
+    }
+
 }

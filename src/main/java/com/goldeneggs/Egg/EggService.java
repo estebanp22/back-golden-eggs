@@ -1,6 +1,8 @@
 package com.goldeneggs.Egg;
 
 import com.goldeneggs.Dto.Egg.EggSummaryDto;
+import com.goldeneggs.Order.Order;
+import com.goldeneggs.User.User;
 
 import java.util.List;
 
@@ -61,5 +63,22 @@ public interface EggService {
      * @return A list of eggSummary
      */
     List<EggSummaryDto> findEggSummaries();
+
+    /**
+     * Update the egg quantity when new order is save
+     * @param quantity the quantity requested
+     */
+    boolean updateEggQuantity(int quantity, String color, String type, User user, Order order);
+
+    /**
+     * Update the egg quantity when new order is canceled
+     * @param totalEgg egg to restock
+     * @param color color of the egg
+     * @param type type egg
+     * @param user User to control inventory
+     * @param order the order to cancel
+     * @return true if the quantity egg are restock
+     */
+    boolean restockEggs(int totalEgg,  String color, String type, User user, Order order);
 
 }

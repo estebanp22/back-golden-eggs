@@ -1,5 +1,6 @@
 package com.goldeneggs.InventoryMovement;
 
+import com.goldeneggs.Dto.InventoryMovement.InventoryMovementDTO;
 import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class InventoryMovementController {
      * @return ResponseEntity containing a list of all inventory items.
      */
     @GetMapping("/getAll")
-    public ResponseEntity<List<InventoryMovement>> getAll() {
+    public ResponseEntity<List<InventoryMovementDTO>> getAll() {
         return ResponseEntity.ok(inventoryMovementService.getAll());
     }
 

@@ -95,4 +95,11 @@ public interface PayService {
      * @param paymentMethod The method of payment (e.g., cash, card, or transfer).
      */
     void createPayForBill(Bill bill, String paymentMethod);
+
+    /**
+     * Calculates the total income from all payments made in the last calendar month.
+     *
+     * @return The total sum of all payments from the previous calendar month as a {@code Double}.
+     */
+    Double totalExpensesCurrentMonth();
 }

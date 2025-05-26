@@ -118,4 +118,15 @@ public class PayController {
         Double total = payService.totalIncomeCurrentMonth();
         return ResponseEntity.ok(total);
     }
+
+    /**
+     * Returns the total income from payments made during the current month.
+     *
+     * @return Total income for the current month as {@code Double}, or 0.0 if no payments exist.
+     */
+    @GetMapping("/totalExpensesCurrentMonth")
+    public ResponseEntity<Double> getTotalExpensesThisMonth() {
+        Double total = payService.totalExpensesCurrentMonth();
+        return ResponseEntity.ok(total);
+    }
 }
