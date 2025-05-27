@@ -18,8 +18,6 @@ import com.goldeneggs.Supplier.SupplierRepository;
 import com.goldeneggs.TypeEgg.TypeEgg;
 import com.goldeneggs.TypeEgg.TypeEggRepository;
 import com.goldeneggs.User.User;
-import com.goldeneggs.User.UserRepository;
-import com.goldeneggs.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -333,7 +331,7 @@ public class EggServiceImpl implements EggService {
         return true;
     }
 
-    private Egg createNewEgg(String color, TypeEgg typeEgg, int quantity) {
+    public Egg createNewEgg(String color, TypeEgg typeEgg, int quantity) {
         Calendar calendario = new GregorianCalendar();
 
         // Agregar 15 días
@@ -349,7 +347,7 @@ public class EggServiceImpl implements EggService {
                 .build();
     }
 
-    private void createInventoryMovement(Egg egg, User user, Order order, int quantity, boolean isRestock) {
+    public void createInventoryMovement(Egg egg, User user, Order order, int quantity, boolean isRestock) {
         int combs = quantity / 30;
         if (combs > 0) {
             InventoryMovement movement = InventoryMovement.builder()

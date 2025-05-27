@@ -1,8 +1,10 @@
 package com.goldeneggs.OrderEgg;
 
+import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidOrderEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.Order.Order;
+import com.goldeneggs.TypeEgg.TypeEgg;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -247,5 +249,36 @@ class OrderEggServiceImplTest {
 
         // Ejecutar y Verificar
         assertThrows(ResourceNotFoundException.class, () -> orderEggService.delete(2L));
+    }
+
+    @Test
+    void createOrderEggForEgg_ShouldCreateOrderEgg_WhenDataIsValid() {
+        // Configurar datos de prueba
+        Egg egg = new Egg();
+        egg.setType(new TypeEgg()); // Asume que EggType tiene un campo "type"
+        egg.setColor("Blanco");
+        egg.setAvibleQuantity(100);
+        egg.setBuyPrice(2.5);
+
+        OrderEgg savedOrderEgg = new OrderEgg();
+        savedOrderEgg.setType(egg.getType().getType());
+        savedOrderEgg.setColor(egg.getColor());
+        savedOrderEgg.setQuantity(egg.getAvibleQuantity());
+        savedOrderEgg.setUnitPrice(egg.getBuyPrice());
+        savedOrderEgg.setSubtotal(egg.getBuyPrice() * egg.getAvibleQuantity());
+
+        // Configurar mock
+        when(orderEggRepository.save(any(OrderEgg.class))).thenReturn(savedOrderEgg);
+
+        // Ejecutar método
+        OrderEgg result = orderEggService.createOrderEggForEgg(egg);
+
+        // Verificar
+        assertNotNull(result);
+        assertEquals("Blanco", result.getColor());
+        assertEquals(100, result.getQuantity());
+        assertEquals(2.5, result.getUnitPrice());
+        assertEquals(250.0, result.getSubtotal()); // 2.5 * 100 = 250
+        verify(orderEggRepository).save(any(OrderEgg.class));
     }
 }

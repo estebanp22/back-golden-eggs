@@ -93,7 +93,7 @@ public class OrderController {
         }catch (InvalidOrderDataException e) {
             return new  ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }catch (RuntimeException e){
-            return new ResponseEntity<>("Error al procresar la orden:" + e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Error al procesar la orden:" + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
