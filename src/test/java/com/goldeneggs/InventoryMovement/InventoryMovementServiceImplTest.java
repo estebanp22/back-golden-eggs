@@ -1,5 +1,6 @@
 package com.goldeneggs.InventoryMovement;
 
+import com.goldeneggs.Dto.InventoryMovement.InventoryMovementDTO;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Egg.EggRepository;
@@ -15,10 +16,7 @@ import com.goldeneggs.User.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
@@ -150,8 +148,8 @@ public class InventoryMovementServiceImplTest {
     }
 
     @Test
-    void getAllMovements_ShouldReturnListOfMovements(){
-       InventoryMovement movement1 = InventoryMovement.builder()
+    void getAllMovements_ShouldReturnListOfDTOs() {
+        InventoryMovement movement1 = InventoryMovement.builder()
                 .id(2L)
                 .movementDate(new java.sql.Date(System.currentTimeMillis()))
                 .combs(100)
@@ -162,16 +160,17 @@ public class InventoryMovementServiceImplTest {
 
         when(movementRepository.findAll()).thenReturn(Arrays.asList(movement1, movement));
 
-        List<InventoryMovement> result = movementService.getAll();
+        List<InventoryMovementDTO> result = movementService.getAll();
 
         assertEquals(2, result.size());
 
-        InventoryMovement aux = result.get(1);
+        InventoryMovementDTO aux = result.get(1);
         assertEquals(movement.getId(), aux.getId());
         assertEquals(movement.getCombs(), aux.getCombs());
 
         verify(movementRepository).findAll();
     }
+
 
     @Test
     void testGetMovementById_Success() {
@@ -372,5 +371,40 @@ public class InventoryMovementServiceImplTest {
             );
             assertEquals("User does not exist", exception.getMessage());
         }
+    }
+
+    @Test
+    void createMovementForEgg_ShouldCreateMovement_WhenDataIsValid() {
+        // Datos de prueba
+        Long userId = 1L;
+        User mockUser = new User();
+        mockUser.setId(userId);
+
+        Egg egg = new Egg();
+        egg.setAvibleQuantity(60); // 60 / 30 = 2 combs
+
+        Order order = new Order();
+
+        // Configuración de mocks
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        // Ejecución
+        movementService.createMovementForEgg(egg, order, userId);
+
+        // Verificaciones
+        verify(userRepository).findById(userId);
+
+        // Captura el argumento guardado
+        ArgumentCaptor<InventoryMovement> movementCaptor = ArgumentCaptor.forClass(InventoryMovement.class);
+        verify(movementRepository).save(movementCaptor.capture());
+
+        InventoryMovement savedMovement = movementCaptor.getValue();
+
+        // Aserciones
+        assertEquals(2, savedMovement.getCombs()); // 60 / 30 = 2
+        assertEquals(egg, savedMovement.getEgg());
+        assertEquals(order, savedMovement.getOrder());
+        assertEquals(mockUser, savedMovement.getUser());
+        assertNotNull(savedMovement.getMovementDate());
     }
 }

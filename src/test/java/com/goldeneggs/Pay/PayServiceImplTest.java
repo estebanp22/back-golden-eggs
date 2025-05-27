@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -336,6 +338,49 @@ class PayServiceImplTest {
         assertEquals(paymentMethod, savedPay.getPaymentMethod());
     }
 
+    @Test
+    void totalExpensesCurrentMonth_ReturnsTotal_WhenExpensesExist() {
+        // Usa el mes actual (como el método real)
+        LocalDate now = LocalDate.now();
+        Date startOfMonth = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date today = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
+        when(payRepository.sumAmountSaleInCurrentMonth(startOfMonth, today)).thenReturn(1500.0);
+
+        Double result = payService.totalExpensesCurrentMonth();
+
+        assertEquals(1500.0, result);
+        verify(payRepository).sumAmountSaleInCurrentMonth(startOfMonth, today);
+    }
+
+    @Test
+    void totalExpensesCurrentMonth_ReturnsZero_WhenNoExpenses() {
+        LocalDate now = LocalDate.now();
+        Date startOfMonth = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date today = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        // Configura el mock para devolver 0.0 (o null, dependiendo de la implementación real)
+        when(payRepository.sumAmountSaleInCurrentMonth(startOfMonth, today)).thenReturn(0.0);
+
+        Double result = payService.totalExpensesCurrentMonth();
+
+        assertEquals(0.0, result);
+        verify(payRepository, times(1)).sumAmountSaleInCurrentMonth(startOfMonth, today);
+    }
+
+    @Test
+    void totalExpensesCurrentMonth_ReturnsZero_WhenRepositoryReturnsNull() {
+        LocalDate now = LocalDate.now();
+        Date startOfMonth = Date.from(now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date today = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        // Configura el mock para devolver null (simulando que no hay registros)
+        when(payRepository.sumAmountSaleInCurrentMonth(startOfMonth, today)).thenReturn(null);
+
+        Double result = payService.totalExpensesCurrentMonth();
+
+        assertEquals(0.0, result); // Verifica que maneja el null correctamente
+        verify(payRepository, times(1)).sumAmountSaleInCurrentMonth(startOfMonth, today);
+    }
 
 }

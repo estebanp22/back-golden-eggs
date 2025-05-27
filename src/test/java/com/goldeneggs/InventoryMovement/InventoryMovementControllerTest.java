@@ -1,6 +1,7 @@
 package com.goldeneggs.InventoryMovement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.goldeneggs.Dto.InventoryMovement.InventoryMovementDTO;
 import com.goldeneggs.Dto.RegisterDto;
 import com.goldeneggs.Egg.Egg;
 import com.goldeneggs.Exception.InvalidInventoryMovementDataException;
@@ -148,12 +149,14 @@ public class InventoryMovementControllerTest {
 
     @Test
     void testGetAll() throws Exception {
-        when(movementService.getAll()).thenReturn(List.of(movement));
+        InventoryMovementDTO dto = new InventoryMovementDTO(movement);
+        when(movementService.getAll()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/v1/inventories/getAll"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(movement.getId()));
     }
+
 
     @Test
     void testDeleteMovement_Success() throws Exception {

@@ -20,10 +20,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.sql.Date;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -296,5 +298,33 @@ public class OrderControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void getOrdersByCustomer_ShouldReturnOrders_WhenCustomerHasOrders() throws Exception {
+        // Datos de prueba
+        Long customerId = 1L;
+        OrderRequestDTO order1 = new OrderRequestDTO(/* datos de orden */);
+        OrderRequestDTO order2 = new OrderRequestDTO(/* datos de orden */);
+        List<OrderRequestDTO> mockOrders = Arrays.asList(order1, order2);
 
+        // Configurar mock
+        when(orderService.getOrdersByCustomerId(customerId)).thenReturn(mockOrders);
+
+        // Ejecutar petición HTTP GET
+        mockMvc.perform(get("/api/v1/orders/getOrdersCustomer/{id}", customerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2))); // Verifica tamaño de la lista
+        verify(orderService).getOrdersByCustomerId(customerId);
+    }
+
+    @Test
+    void saveOrder_ShouldReturnBadRequest_WhenUnexpectedErrorOccurs() throws Exception {
+        when(orderService.saveOrder(any(OrderRequestDTO.class)))
+                .thenThrow(new RuntimeException(""));
+
+        mockMvc.perform(post("/api/v1/orders/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(order)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Error al procesar la orden:"));
+    }
 }

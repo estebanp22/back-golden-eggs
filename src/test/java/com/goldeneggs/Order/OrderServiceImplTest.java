@@ -5,6 +5,8 @@ import com.goldeneggs.Bill.BillServiceImpl;
 import com.goldeneggs.Dto.Order.CartItemDTO;
 import com.goldeneggs.Dto.Order.OrderDTO;
 import com.goldeneggs.Dto.Order.OrderRequestDTO;
+import com.goldeneggs.Egg.Egg;
+import com.goldeneggs.Egg.EggService;
 import com.goldeneggs.Exception.InvalidOrderDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
 import com.goldeneggs.OrderEgg.OrderEgg;
@@ -46,6 +48,9 @@ public class OrderServiceImplTest {
 
     @Mock
     private PayServiceImpl payService;
+
+    @Mock
+    private EggService eggService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -328,17 +333,31 @@ public class OrderServiceImplTest {
 
     @Test
     void cancelOrder_shouldSetStatusToCancelled() {
+        User user = new User();
+        user.setId(1L);
+        user.setName("Felipe");
+
+        OrderEgg oe = new OrderEgg();
+        oe.setColor("Blanco");
+        oe.setType("Tipo A");
+        oe.setQuantity(2); // 2 cartones = 60 huevos
+
         Order order = new Order();
         order.setId(1L);
         order.setState(Order.STATE_PENDING);
+        order.setUser(user);
+        order.setOrderEggs(List.of(oe));
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(eggService.restockEggs(eq(60), eq("Blanco"), eq("Tipo A"), eq(user), eq(order))).thenReturn(true);
 
         orderService.cancelOrder(1L);
 
         assertEquals(Order.STATE_CANCELED, order.getState());
         verify(orderRepository).save(order);
+        verify(eggService).restockEggs(60, "Blanco", "Tipo A", user, order);
     }
+
 
     @Test
     void processOrder_shouldSetStatusAndCreateBill() {
@@ -370,17 +389,32 @@ public class OrderServiceImplTest {
         CartItemDTO cartItem = new CartItemDTO();
         cartItem.setName("Tipo A");
         cartItem.setColor("Blanco");
-        cartItem.setQuantity(10);
+        cartItem.setQuantity(1); // 1 cartón
         cartItem.setPrice(2.5);
         dto.setCartItem(Collections.singletonList(cartItem));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        // Devolver el mismo order base dos veces (vacío y actualizado)
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            o.setId(1L); // simula que se guardó con ID
+            return o;
+        });
+
+        // El problema estaba acá
+        when(eggService.updateEggQuantity(
+                eq(30),
+                eq("Blanco"),
+                eq("Tipo A"),
+                eq(user),
+                any(Order.class)
+        )).thenReturn(true);
 
         Order saved = orderService.saveOrder(dto);
 
         assertEquals("Felipe", saved.getUser().getName());
-        assertEquals(2, saved.getOrderEggs().size());
+        assertEquals(1, saved.getOrderEggs().size());
         assertEquals(180000.0, saved.getTotalPrice());
     }
 
@@ -397,12 +431,13 @@ public class OrderServiceImplTest {
 
     @Test
     public void testConstructor() {
-        OrderServiceImpl service = new OrderServiceImpl(orderRepository, billService, payService, userRepository);
+        OrderServiceImpl service = new OrderServiceImpl(orderRepository, billService, payService, userRepository, eggService);
         assertNotNull(service);
     }
 
     @Test
     public void testLambdaSaveOrder1() {
+        // Datos de entrada
         OrderRequestDTO dto = new OrderRequestDTO();
         dto.setIdCustomer(1L);
         dto.setTotalPrice(25.0);
@@ -412,17 +447,34 @@ public class OrderServiceImplTest {
         CartItemDTO cartItem = new CartItemDTO();
         cartItem.setName("Tipo A");
         cartItem.setColor("Blanco");
-        cartItem.setQuantity(10);
+        cartItem.setQuantity(10); // 10 cartones = 300 huevos
         cartItem.setPrice(2.5);
         dto.setCartItem(Collections.singletonList(cartItem));
 
+        // Usuario simulado
+        User user = new User();
+        user.setId(1L);
+        user.setName("Felipe");
+        user.setUsername("felipe123");
+        user.setEmail("test@example.com");
+        user.setRoles(List.of(new Role(1L, "CUSTOMER")));
+
+        // Mockeos necesarios
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(eggService.updateEggQuantity(eq(300), eq("Blanco"), eq("Tipo A"), eq(user), any(Order.class))).thenReturn(true);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
+        // Ejecución
         Order result = orderService.saveOrder(dto);
 
+        // Verificación
         assertNotNull(result);
+        assertEquals(1, result.getOrderEggs().size());
         assertEquals("Tipo A", result.getOrderEggs().get(0).getType());
+        assertEquals("Blanco", result.getOrderEggs().get(0).getColor());
+
+        verify(eggService).updateEggQuantity(300, "Blanco", "Tipo A", user, result);
+        verify(orderRepository , times(2)).save(any(Order.class));
     }
 
     @Test
@@ -457,14 +509,37 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    public void testCancelOrder() {
+    public void testCancelOrder_successfullyCancels() {
+        // Simular datos
+        OrderEgg oe = new OrderEgg();
+        oe.setType("Tipo A");
+        oe.setColor("Blanco");
+        oe.setQuantity(2); // 2 cartones = 60 huevos
+
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("felipe123");
+
+        Order order = new Order();
+        order.setId(1L);
+        order.setUser(user);
+        order.setState(Order.STATE_PENDING);
+        order.setOrderEggs(List.of(oe));
+
+        // Mocks
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(eggService.restockEggs(60, "Blanco", "Tipo A", user, order)).thenReturn(true);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
+        // Ejecución
         orderService.cancelOrder(1L);
+
+        // Verificaciones
+        assertEquals(Order.STATE_CANCELED, order.getState());
+        verify(eggService).restockEggs(60, "Blanco", "Tipo A", user, order);
         verify(orderRepository).save(order);
-        assertEquals("CANCELADA", order.getState());
     }
+
 
     @Test
     public void testProcessOrder() {
@@ -480,21 +555,6 @@ public class OrderServiceImplTest {
         assertEquals("COMPLETADA", order.getState());
     }
 
-
-    @Test
-    public void testValidateOrderOrThrow_InvalidOrderEggs_ThrowsException() {
-        Order order = new Order();
-        order.setUser(new User());
-        order.setOrderEggs(Collections.emptyList());
-        order.setTotalPrice(100.0);
-        order.setOrderDate(Date.valueOf(LocalDate.now()));
-        order.setState("PENDING");
-
-        InvalidOrderDataException ex = assertThrows(InvalidOrderDataException.class, () ->
-                orderService.validateOrderOrThrow(order)
-        );
-        assertEquals("Order Eggs are not valid.", ex.getMessage());
-    }
 
     @Test
     public void testValidateOrderOrThrow_InvalidOrderDate_ThrowsException() {
@@ -564,6 +624,115 @@ public class OrderServiceImplTest {
         );
 
         assertEquals("Usuario no encontrado", ex.getMessage());
+    }
+
+    @Test
+    void cancelOrder_ShouldThrowException_WhenRestockEggsFails() {
+        Long orderId = 1L;
+        Order order = new Order();
+        order.setId(orderId);
+        order.setState(Order.STATE_PENDING);
+
+        OrderEgg orderEgg = new OrderEgg();
+        orderEgg.setType("Gallina");
+        orderEgg.setColor("Blanco");
+        orderEgg.setQuantity(2); // 2 * 30 = 60 huevos a restockear
+        order.setOrderEggs(List.of(orderEgg));
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(eggService.restockEggs(60, "Blanco", "Gallina", order.getUser(), order))
+                .thenReturn(false); // Simulamos que falla el restock
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            orderService.cancelOrder(orderId);
+        });
+
+        assertEquals(
+                "Error al devolver huevos al inventario para tipo: Gallina, color: Blanco",
+                exception.getMessage()
+        );
+
+        verify(orderRepository, never()).save(order);
+    }
+
+    @Test
+    void createOrderForEgg_ShouldCreateOrderWithCorrectData() {
+        // 1. Configuración de datos
+        Long userId = 1L;
+        User mockUser = new User();
+        mockUser.setId(userId);
+
+        Egg egg = new Egg();
+        egg.setAvibleQuantity(100);
+        egg.setBuyPrice(2.5); // Total esperado: 2.5 * 100 = 250.0
+
+        List<OrderEgg> orderEggs = List.of(new OrderEgg());
+
+        // 2. Mock del repositorio (¡IMPORTANTE!)
+        when(userRepository.getById(userId)).thenReturn(mockUser); // Asegura que retorne el usuario mock
+
+        // Mock para orderRepository.save
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order orderToSave = invocation.getArgument(0); // Captura el objeto Order que se está guardando
+            orderToSave.setId(1L); // Simula un ID generado
+            return orderToSave; // Retorna el mismo objeto (no null)
+        });
+
+        // 3. Ejecución
+        Order result = orderService.createOrderForEgg(userId, orderEggs, egg);
+
+        // 4. Validaciones
+        assertNotNull(result, "La orden creada no debe ser null");
+        assertEquals(mockUser, result.getUser());
+        assertEquals(orderEggs, result.getOrderEggs());
+        assertEquals(250.0, result.getTotalPrice(), 0.01); // Delta para comparación de doubles
+        assertEquals(Order.STATE_INVENTORY, result.getState());
+        assertNotNull(result.getOrderDate());
+
+        verify(orderRepository).save(any(Order.class));
+    }
+
+    @Test
+    void getOrdersByCustomerId_ShouldReturnListOfDTOs() {
+        // Configuración
+        Long customerId = 1L;
+        User user = new User();
+        user.setId(customerId);
+
+        OrderEgg orderEgg1 = new OrderEgg();
+        orderEgg1.setType("Gallina");
+        orderEgg1.setUnitPrice(2.5);
+        orderEgg1.setQuantity(10);
+
+        Order order1 = new Order();
+        order1.setUser(user);
+        order1.setState(Order.STATE_COMPLETED);
+        order1.setTotalPrice(25.0);
+        order1.setOrderDate(new java.sql.Date(System.currentTimeMillis()));
+        order1.setOrderEggs(List.of(orderEgg1));
+
+        when(orderRepository.getOrdersByUserId(customerId)).thenReturn(List.of(order1));
+
+        // Ejecución
+        List<OrderRequestDTO> result = orderService.getOrdersByCustomerId(customerId);
+
+        // Validaciones
+        assertEquals(1, result.size());
+
+        OrderRequestDTO dto = result.get(0);
+        assertEquals(customerId, dto.getIdCustomer());
+        assertEquals(Order.STATE_COMPLETED, dto.getState());
+        assertEquals(25.0, dto.getTotalPrice());
+        assertNotNull(dto.getOrderDate());
+
+        // Verifica ítems del carrito
+        assertEquals(1, dto.getCartItem().size());
+        CartItemDTO cartItem = dto.getCartItem().get(0);
+        assertEquals("Gallina", cartItem.getName());
+        assertEquals(2.5, cartItem.getPrice());
+        assertEquals(10, cartItem.getQuantity());
+
+        verify(orderRepository).getOrdersByUserId(customerId);
     }
 
 

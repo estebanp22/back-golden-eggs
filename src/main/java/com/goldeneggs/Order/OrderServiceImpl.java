@@ -41,8 +41,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final PayService payService;
 
-    @Autowired
-    private EggService eggService;
+    private final EggService eggService;
 
     /**
      * Constructs an instance of the OrderServiceImpl class.
@@ -53,11 +52,12 @@ public class OrderServiceImpl implements OrderService {
      * @param userRepository The repository used to manage and retrieve user data.
      */
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, BillService billService, PayService payService, UserRepository userRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, BillService billService, PayService payService, UserRepository userRepository, EggService eggService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.billService = billService;
         this.payService = payService;
+        this.eggService = eggService;
     }
 
 

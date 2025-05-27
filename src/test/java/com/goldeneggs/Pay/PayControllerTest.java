@@ -14,12 +14,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -204,5 +207,39 @@ public class PayControllerTest {
                 .andExpect(content().string("1500.0"));
 
         verify(payService).totalIncomeCurrentMonth();
+    }
+
+    @Test
+    void getTotalExpensesThisMonth_ReturnsTotal_WhenExpensesExist() {
+        // Configura el mock para devolver 1500.0
+        when(payService.totalExpensesCurrentMonth()).thenReturn(1500.0);
+
+        ResponseEntity<Double> response = payController.getTotalExpensesThisMonth();
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1500.0, response.getBody());
+        verify(payService, times(1)).totalExpensesCurrentMonth(); // Verifica que se llamó 1 vez
+    }
+
+    @Test
+    void getTotalExpensesThisMonth_ReturnsZero_WhenNoExpenses() {
+        // Configura el mock para devolver 0.0
+        when(payService.totalExpensesCurrentMonth()).thenReturn(0.0);
+
+        ResponseEntity<Double> response = payController.getTotalExpensesThisMonth();
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(0.0, response.getBody());
+        verify(payService, times(1)).totalExpensesCurrentMonth();
+    }
+
+    @Test
+    void getTotalExpensesThisMonth_HandlesServiceException() {
+        // Configura el mock para lanzar una excepción
+        when(payService.totalExpensesCurrentMonth()).thenThrow(new RuntimeException("Database error"));
+
+        assertThrows(RuntimeException.class, () -> {
+            payController.getTotalExpensesThisMonth();
+        });
     }
 }

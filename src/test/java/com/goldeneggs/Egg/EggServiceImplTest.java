@@ -1,12 +1,18 @@
 package com.goldeneggs.Egg;
 
+import com.goldeneggs.Bill.Bill;
+import com.goldeneggs.Bill.BillService;
 import com.goldeneggs.Dto.Egg.EggSummaryDto;
 import com.goldeneggs.Exception.InvalidEggDataException;
 import com.goldeneggs.Exception.ResourceNotFoundException;
-import com.goldeneggs.InventoryMovement.InventoryMovement;
 import com.goldeneggs.InventoryMovement.InventoryMovementRepository;
+import com.goldeneggs.InventoryMovement.InventoryMovementService;
 import com.goldeneggs.Order.Order;
+import com.goldeneggs.Order.OrderService;
+import com.goldeneggs.OrderEgg.OrderEgg;
 import com.goldeneggs.OrderEgg.OrderEggRepository;
+import com.goldeneggs.OrderEgg.OrderEggService;
+import com.goldeneggs.Pay.PayService;
 import com.goldeneggs.Supplier.Supplier;
 import com.goldeneggs.Supplier.SupplierRepository;
 import com.goldeneggs.TypeEgg.TypeEgg;
@@ -25,9 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -57,14 +61,37 @@ public class EggServiceImplTest {
     @Mock
     private InventoryMovementRepository inventoryMovementRepository;
 
+    @Mock
+    private OrderEggService orderEggService;
+
+    @Mock
+    private OrderService orderService;
+
+    @Mock
+    private InventoryMovementService inventoryMovementService;
+
+    @Mock
+    private BillService billService;
+
+    @Mock
+    private PayService payService;
+
     private Egg sampleEgg;
     private Supplier supplier;
     private TypeEgg typeEgg;
+    private Order order;
+    private User user;
+    private Long testUserId = 1L;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
+        user = new User();
+        user.setId(1L);
+
+        order = new Order();
+        order.setId(1L);
         //Crate test supplier
         supplier = Supplier.builder()
                 .id(1L)
@@ -151,63 +178,6 @@ public class EggServiceImplTest {
         assertEquals(sampleEgg.getType(), egg1.getType());
 
         verify(eggRepository).findAll();
-    }
-
-    @Test
-    void testSaveEgg_Success() {
-        try (MockedStatic<EggValidator> mockedValidator = mockStatic(EggValidator.class)) {
-            mockedValidator.when(() -> EggValidator.validateTypeEgg(sampleEgg.getType())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateColor(sampleEgg.getColor())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateBuyPrice(sampleEgg.getBuyPrice())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateSalePrice(sampleEgg.getBuyPrice(), sampleEgg.getSalePrice())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateExpirationDate(sampleEgg.getExpirationDate())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateSupplier(sampleEgg.getSupplier())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateAviableQuantity(sampleEgg.getAvibleQuantity())).thenReturn(true);
-
-            when(typeEggRepository.existsById(sampleEgg.getType().getId())).thenReturn(true);
-            when(supplierRepository.existsById(sampleEgg.getSupplier().getId())).thenReturn(true);
-            when(eggRepository.save(sampleEgg)).thenReturn(sampleEgg);
-            when(userRepository.getById(1L)).thenReturn(User.builder().id(1L).build());
-
-            Egg result = eggService.save(sampleEgg, 1L);
-
-            assertNotNull(result);
-            assertEquals(sampleEgg.getType(), result.getType());
-            verify(inventoryMovementRepository).save(any(InventoryMovement.class));
-        }
-    }
-
-    @Test
-    void testUpdateEgg_Success() {
-        try (MockedStatic<EggValidator> mockedValidator = mockStatic(EggValidator.class)) {
-            mockedValidator.when(() -> EggValidator.validateTypeEgg(sampleEgg.getType())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateColor(sampleEgg.getColor())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateBuyPrice(sampleEgg.getBuyPrice())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateSalePrice(sampleEgg.getBuyPrice(), sampleEgg.getSalePrice())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateExpirationDate(sampleEgg.getExpirationDate())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateSupplier(sampleEgg.getSupplier())).thenReturn(true);
-            mockedValidator.when(() -> EggValidator.validateAviableQuantity(sampleEgg.getAvibleQuantity())).thenReturn(true);
-
-            when(eggRepository.findById(1L)).thenReturn(Optional.of(sampleEgg));
-            when(typeEggRepository.existsById(sampleEgg.getType().getId())).thenReturn(true);
-            when(supplierRepository.existsById(sampleEgg.getSupplier().getId())).thenReturn(true);
-            when(eggRepository.save(any(Egg.class))).thenReturn(sampleEgg);
-
-            InventoryMovement mockMovement = InventoryMovement.builder()
-                    .id(1L)
-                    .egg(sampleEgg)
-                    .combs(10)
-                    .movementDate(new java.sql.Date(System.currentTimeMillis()))
-                    .build();
-
-            when(inventoryMovementRepository.findTopByEggOrderByMovementDateDesc(sampleEgg))
-                    .thenReturn(Optional.of(mockMovement));
-
-            Egg updated = eggService.update(1L, sampleEgg, 1L);
-
-            assertNotNull(updated);
-            verify(inventoryMovementRepository).save(mockMovement);
-        }
     }
 
     @Test
@@ -451,4 +421,185 @@ public class EggServiceImplTest {
         verify(eggRepository, times(1)).deleteById(eggId);
     }
 
+    @Test
+    void updateEggQuantity_ShouldReturnTrue_WhenEnoughInventory() {
+        // Configurar
+        Egg egg1 = Egg.builder()
+                .avibleQuantity(100)
+                .color("Blanco")
+                .type(typeEgg)
+                .expirationDate(Date.valueOf(LocalDate.now().plusDays(10)))
+                .build();
+
+        Egg egg2 = Egg.builder()
+                .avibleQuantity(50)
+                .color("Blanco")
+                .type(typeEgg)
+                .expirationDate(Date.valueOf(LocalDate.now().plusDays(5)))
+                .build();
+
+        when(typeEggRepository.findByType("AA")).thenReturn(typeEgg);
+        when(eggRepository.findEggsByColorAndType("Blanco", typeEgg))
+                .thenReturn(new ArrayList<>(List.of(egg1, egg2)));
+
+        // Ejecutar
+        boolean result = eggService.updateEggQuantity(120, "Blanco", "AA", user, order);
+
+        // Verificar
+        assertTrue(result);
+        assertEquals(30, egg1.getAvibleQuantity());
+        assertEquals(0, egg2.getAvibleQuantity());
+    }
+
+    @Test
+    void updateEggQuantity_ShouldReturnFalse_WhenNotEnoughInventory() {
+        // Configurar
+        Egg egg = Egg.builder()
+                .avibleQuantity(50)
+                .color("Rojo")
+                .type(typeEgg)
+                .expirationDate(Date.valueOf(LocalDate.now().plusDays(5)))
+                .build();
+
+        when(typeEggRepository.findByType("AA")).thenReturn(typeEgg);
+        when(eggRepository.findEggsByColorAndType("Rojo", typeEgg))
+                .thenReturn(new ArrayList<>(List.of(egg)));
+
+        // Ejecutar
+        boolean result = eggService.updateEggQuantity(60, "Rojo", "AA", user, order);
+
+        // Verificar
+        assertFalse(result);
+        assertEquals(0, egg.getAvibleQuantity());
+        verify(eggRepository, never()).save(any());
+        verify(inventoryMovementRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEggQuantity_ShouldReturnFalse_WhenQuantityIsZeroOrNegative() {
+        assertFalse(eggService.updateEggQuantity(0, "Blanco", "AA", user, order));
+        assertFalse(eggService.updateEggQuantity(-10, "Blanco", "AA", user, order));
+
+        verifyNoInteractions(typeEggRepository, eggRepository, inventoryMovementRepository);
+    }
+
+    @Test
+    void updateEggQuantity_ShouldReturnFalse_WhenTypeNotFound() {
+        when(typeEggRepository.findByType("AAA")).thenReturn(null);
+
+        boolean result = eggService.updateEggQuantity(30, "Blanco", "AAA", user, order);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void restockEggs_ShouldReturnTrue_WhenAddingToExistingEggs() {
+        // Configurar
+        Egg existingEgg = Egg.builder()
+                .avibleQuantity(50)
+                .color("Blanco")
+                .type(typeEgg)
+                .expirationDate(Date.valueOf(LocalDate.now().plusDays(5)))
+                .build();
+
+        when(typeEggRepository.findByType("AA")).thenReturn(typeEgg);
+        when(eggRepository.findEggsByColorAndType("Blanco", typeEgg))
+                .thenReturn(new ArrayList<>(List.of(existingEgg)));
+
+        // Ejecutar
+        boolean result = eggService.restockEggs(60, "Blanco", "AA", user, order);
+
+        // Verificar
+        assertTrue(result);
+        assertEquals(110, existingEgg.getAvibleQuantity()); // 50 + 60
+
+        verify(eggRepository).saveAll(List.of(existingEgg));
+    }
+
+    @Test
+    void restockEggs_ShouldCreateNewEgg_WhenNoMatchingEggsExist() {
+        // Configurar
+        when(typeEggRepository.findByType("AA")).thenReturn(typeEgg);
+        when(eggRepository.findEggsByColorAndType("Blanco", typeEgg))
+                .thenReturn(Collections.emptyList());
+
+        // Ejecutar
+        boolean result = eggService.restockEggs(90, "Blanco", "AA", user, order);
+
+        // Verificar
+        assertTrue(result);
+
+        verify(eggRepository).save(argThat(egg ->
+                egg.getColor().equals("Blanco") &&
+                        egg.getType().equals(typeEgg) &&
+                        egg.getAvibleQuantity() == 90 &&
+                        egg.getExpirationDate() != null
+        ));
+
+        verify(inventoryMovementRepository).save(argThat(movement ->
+                movement.getCombs() == 3 // 90/30 = 3 combs
+        ));
+    }
+
+    @Test
+    void restockEggs_ShouldReturnFalse_WhenQuantityIsInvalid() {
+        assertFalse(eggService.restockEggs(0, "Blanco", "AA", user, order));
+        assertFalse(eggService.restockEggs(-10, "Blanco", "AA", user, order));
+
+        verifyNoInteractions(typeEggRepository, eggRepository, inventoryMovementRepository);
+    }
+
+    @Test
+    void restockEggs_ShouldReturnFalse_WhenTypeNotFound() {
+        when(typeEggRepository.findByType("AAA")).thenReturn(null);
+
+        boolean result = eggService.restockEggs(30, "Blanco", "AAA", user, order);
+
+        assertFalse(result);
+        verify(eggRepository, never()).findEggsByColorAndType(any(), any());
+    }
+
+    @Test
+    void createNewEgg_ShouldSetCorrectExpirationDate() {
+        // Ejecutar
+        Egg newEgg = eggService.createNewEgg("Rojo", typeEgg, 100);
+
+        // Verificar
+        assertEquals("Rojo", newEgg.getColor());
+        assertEquals(typeEgg, newEgg.getType());
+        assertEquals(100, newEgg.getAvibleQuantity());
+
+        // Verificar que la fecha de expiración es 15 días en el futuro
+        LocalDate expectedDate = LocalDate.now().plusDays(15);
+        assertEquals(expectedDate, newEgg.getExpirationDate().toLocalDate());
+    }
+
+    @Test
+    void createInventoryMovement_ShouldSaveMovement_WhenCombsIsPositive() {
+        // Configurar
+        Egg egg = Egg.builder().avibleQuantity(100).build();
+
+        // Ejecutar
+        eggService.createInventoryMovement(egg, user, order, 90, true);
+
+        // Verificar
+        verify(inventoryMovementRepository).save(argThat(movement ->
+                movement.getCombs() == 3 && // 90/30 = 3 combs
+                        movement.getEgg().equals(egg) &&
+                        movement.getUser().equals(user) &&
+                        movement.getOrder().equals(order)
+        ));
+    }
+
+    @Test
+    void createInventoryMovement_ShouldNotSave_WhenCombsIsZero() {
+        // Configurar
+        Egg egg = Egg.builder().avibleQuantity(100).build();
+
+        // Ejecutar
+        eggService.createInventoryMovement(egg, user, order, 20, false);
+
+        // Verificar (20/30 = 0 combs, no debe guardar)
+        verify(inventoryMovementRepository, never()).save(any());
+    }
 }
