@@ -61,20 +61,20 @@ public class SecurityConfig {
                                 .requestMatchers("api/v1/users/register").permitAll()
 
                                 // ENDPOINTS PROTEGIDOS
-                                .requestMatchers("/api/v1/orders/**").hasAuthority("ADMIN") // 👈 esto ya no afecta a getOrdersCustomer/**
+                                .requestMatchers("/api/v1/orders/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
                                 .requestMatchers("/api/v1/visits/count").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/bills/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/eggs/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/inventories/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/payments/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/bills/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
+                                .requestMatchers("/api/v1/eggs/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
+                                .requestMatchers("/api/v1/inventories/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
+                                .requestMatchers("/api/v1/payments/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
                                 .requestMatchers("/api/v1/reports/**").hasAuthority("ADMIN")
                                 .requestMatchers("/api/v1/roles/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/suppliers/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/v1/egg-types/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/suppliers/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
+                                .requestMatchers("/api/v1/egg-types/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
                                 .requestMatchers("/api/v1/users/getByUsername/**").authenticated()
                                 .requestMatchers("/api/v1/users/update/**").authenticated()
                                 .requestMatchers("/api/v1/users/updatepass/password/**").authenticated()
-                                .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
+                                .requestMatchers("/api/v1/users/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
 
                                 .anyRequest().authenticated()
                 )
