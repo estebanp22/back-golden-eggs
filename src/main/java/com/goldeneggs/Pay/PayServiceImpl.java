@@ -129,6 +129,7 @@ public class PayServiceImpl implements PayService {
         Date today = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         Double total = payRepository.sumAmountSaleInCurrentMonth(startOfMonth, today);
+        total = total/30;
 
         return total != null ? total : 0.0;
     }
