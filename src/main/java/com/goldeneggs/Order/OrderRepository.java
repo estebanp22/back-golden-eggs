@@ -40,7 +40,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @param end The end date of the range (inclusive).
      * @return The total count of orders placed within the specified date range.
      */
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderDate BETWEEN :start AND :end")
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderDate BETWEEN :start AND :end AND o.state != 'INVENTORY'")
     Long countOrdersInCurrentMonth(@Param("start") Date start, @Param("end") Date end);
 
     /**
